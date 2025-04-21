@@ -3,6 +3,8 @@ import json
 
 
 # Common parameters
+DIMENSIONS = [1, 2, 3, 5]
+
 ENCODING_TYPES = ["binary", "gray"]
 
 FITNESS_FUNCTIONS = [
@@ -32,6 +34,7 @@ NEXT_GENERATION_SELECTION_TYPES = ["no_worst", "no_worst_parents"]
 FINAL_PARAMS = []
 for (
     fitness_function,
+    dimension,
     encoding_type,
     crossover_type,
     crossover_probability,
@@ -41,6 +44,7 @@ for (
     population
 ) in itertools.product(
     FITNESS_FUNCTIONS,
+    DIMENSIONS,
     ENCODING_TYPES,
     CROSSOVER_TYPES,
     CROSSOVER_PROBABILITIES,
@@ -54,6 +58,7 @@ for (
             "population": population,
 
             "fitness_function": fitness_function,
+            "dimension": dimension,
             "encoding_type": encoding_type,
 
             "generation_gap": generation_gap,

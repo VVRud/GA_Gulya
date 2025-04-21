@@ -4,6 +4,8 @@ import json
 
 
 # Common Parameters
+DIMENSIONS = [1, 2, 3, 5]
+
 ENCODING_TYPES = ["binary", "gray"]
 
 FITNESS_FUNCTIONS = [
@@ -90,12 +92,14 @@ for population in POPULATION_SIZES:
 FINAL_PARAMS = []
 for (
     fitness_function,
+    dimension,
     encoding_type,
     crossover_type,
     crossover_probability,
     population
 ) in itertools.product(
     FITNESS_FUNCTIONS,
+    DIMENSIONS,
     ENCODING_TYPES,
     CROSSOVER_TYPES,
     CROSSOVER_PROBABILITIES,
@@ -113,6 +117,7 @@ for (
                 "population": population,
                 
                 "fitness_function": fitness_function,
+                "dimension": dimension,
                 "encoding_type": encoding_type,
 
                 "parent_selection_type": parent_selection_type,
@@ -125,7 +130,6 @@ for (
         )
 
 print(len(FINAL_PARAMS))
-assert all(len(params) == 7 for params in FINAL_PARAMS)
 
 with open("simple_params.json", "w") as f:
     json.dump(FINAL_PARAMS, f)

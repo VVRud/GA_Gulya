@@ -32,7 +32,7 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The global maximum of the function.
         """
-        return [0.08] * self.n
+        return np.ones(self.n, dtype=np.float64) * 0.08
 
 
     def fitness_func(self, x: List[float]) -> float:

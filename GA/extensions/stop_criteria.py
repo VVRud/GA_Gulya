@@ -21,6 +21,8 @@ class StopCriteria:
         self.fitness_change_history_length = fitness_change_history_length
         self.fitness_change_threshold = fitness_change_threshold
 
+        self.is_converged = False
+
     def is_gomogenic(self, population_number: int) -> bool:
         """
         Check gomogenity of the population by each gene.
@@ -61,16 +63,18 @@ class StopCriteria:
         self.history_data.extend(pygad_instance)
         
         if generation > self.max_generations:
-            pygad_instance.logger.info(f"Stopping condition met: max generations reached ({generation} > {self.max_generations})")
+            pygad_instance.logger.info(f"Hard stop: max generations reached ({generation} > {self.max_generations})")
             return self.STOP_WORD
 
         if self.is_gomogenic(generation):
-            pygad_instance.logger.info(f"Stopping condition met: gomogenity reached ({self.is_gomogenic(generation)})")
+            pygad_instance.logger.info(f"Convergence condition met: gomogenity reached ({self.is_gomogenic(generation)})")
+            self.is_converged = True
             return self.STOP_WORD
 
         fitness_change = self.fitness_change(generation)
         if fitness_change is not None and fitness_change < self.fitness_change_threshold:
-            pygad_instance.logger.info(f"Stopping condition met: fitness change reached ({fitness_change} < {self.fitness_change_threshold})")
+            pygad_instance.logger.info(f"Convergence condition met: fitness change reached ({fitness_change} < {self.fitness_change_threshold})")
+            self.is_converged = True
             return self.STOP_WORD
 
         return None

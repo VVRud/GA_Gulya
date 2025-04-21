@@ -33,7 +33,7 @@ class RastriginFunction(BaseFitnessFunction):
         Returns:
             The global maximum of the function.
         """
-        return [0.0] * self.n
+        return np.zeros(self.n, dtype=np.float64)
 
     def fitness_func(self, x: List[float]) -> float:
         """
