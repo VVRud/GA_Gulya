@@ -74,7 +74,7 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The value of the exponential function.
         """
-        return np.exp(-2 * np.log(2) * ((x - 0.08) / 0.854) ** 2)
+        return np.exp(-2 * np.log(2) * np.power((x - 0.08) / 0.854, 2))
 
     def _sin_part(self, x: float) -> float:
         """
@@ -86,4 +86,4 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The value of the sine function.
         """
-        return np.sin(5 * np.pi * (np.pow(x, 0.75) - 0.05))
+        return np.power(np.sin(5 * np.pi * (np.power(x, 0.75) - 0.05)), 6)
