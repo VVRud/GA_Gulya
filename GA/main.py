@@ -1,6 +1,17 @@
 from pygad import GA
 from tqdm import tqdm
 
+from GA.selection import (
+    RWSSelection,
+    LinearRankRWSSelection,
+    ExponentialRankRWSSelection,
+    SUSSelection,
+    LinearRankSUSSelection,
+    ExponentialRankSUSSelection,
+    TournamentWithReturn,
+    TournamentWithoutReturn,
+    TournamentWithPartialReturn,
+)
 from GA.uniform_mutation import UniformMutation
 from GA.extensions import FitnessFunctionCalculator, StopCriteria, HistoryData, PopulationGenerator
 from GA.fitness_func import Deb4Function, RastriginFunction
@@ -21,7 +32,18 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 NUM_RUNS = 100
-POPULATION_SIZES = [100, 200, 300, 400]
+
+SELECTION_TYPES = {
+    "rws": RWSSelection,
+    "sus": SUSSelection,
+    "lin_rank_rws": LinearRankRWSSelection,
+    "exp_rank_rws": ExponentialRankRWSSelection,
+    "lin_rank_sus": LinearRankSUSSelection,
+    "exp_rank_sus": ExponentialRankSUSSelection,
+    "tour_with": TournamentWithReturn,
+    "tour_without": TournamentWithoutReturn,
+    "tour_with_partial": TournamentWithPartialReturn,
+}
 
 FITNESS_FUNCTIONS = {
     "rastrigin": RastriginFunction(n=1),
@@ -51,7 +73,7 @@ POPULATIONS = {
             population_size=population_size,
             num_runs=NUM_RUNS
         )
-        for population_size in POPULATION_SIZES
+        for population_size in [100, 200, 300, 400]
     }
     for fitness_function_name in FITNESS_FUNCTIONS
 }
@@ -68,15 +90,23 @@ def main(params: dict[str, Any]):
     encoder_decoder = ENCODERS_DECODERS[params["fitness_function"]][params["encoding_type"]]
 
     # Operators
+    # Mutation
     mutator = UniformMutation(mutation_probability=params["mutation_probability"])
-    selector = params["parent_selection_type"]["name"]
-    if selector not in ["rws", "sus"]:
-        logger.warning(f"Selector {selector} not supported, skipping")
-        return
+    
+    # Parent selection
+    selector_name = params["parent_selection_type"]["name"]
+    selector_param = params["parent_selection_type"]["param"]
+    selector_type = SELECTION_TYPES[selector_name]
+    if selector_param is not None:
+        selector = selector_type(selector_param)
+    else:
+        selector = selector_type()
 
+    # Crossover
     crossover_type = params["crossover_type"]
     crossover_probability = params["crossover_probability"]
 
+    # Stop criteria and history data
     history_data = HistoryData(log_step=100)
     stop_criteria = StopCriteria(history_data, max_generations=1_000_000)
 
@@ -96,8 +126,7 @@ def main(params: dict[str, Any]):
         initial_population=population[0],
 
         # Parent selection parameters
-        # TODO(Vlad): Use selector method instead
-        parent_selection_type=selector,
+        parent_selection_type=selector.select,
         num_parents_mating=population_size,
 
         # Crossover parameters
@@ -118,6 +147,7 @@ def main(params: dict[str, Any]):
     best_solution_decoded = encoder_decoder.decode(best_solution)
     logger.info(f"Best solution: {best_solution_decoded}, Best fitness: {best_solution_fitness}")
     logger.info(f"Optimal solution: {fitness_function.global_max_x}, Optimal fitness: {fitness_function.global_max_y}")
+
 
 if __name__ == "__main__":
     # for param in tqdm(PARAMETERS_SIMPLE):

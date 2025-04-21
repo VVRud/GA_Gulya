@@ -42,7 +42,10 @@ class StopCriteria:
             The fitness change of the population.
         """
         if len(self.history_data.avg_fitness_history) > self.fitness_change_history_length:
-            return abs(self.history_data.avg_fitness_history[population_number] - self.history_data.avg_fitness_history[population_number - self.fitness_change_history_length])
+            return abs(
+                self.history_data.avg_fitness_history[population_number]
+                - self.history_data.avg_fitness_history[population_number - self.fitness_change_history_length]
+            )
         return None
 
     def stop_condition(self, pygad_instance: pygad.GA) -> Optional[str]:
