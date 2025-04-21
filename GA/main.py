@@ -114,7 +114,8 @@ def main(params: dict[str, Any]):
         # Basic parameters
         logger=logger,
         parallel_processing=["thread", int(os.cpu_count())],
-        num_generations=10_000_000,
+        # num_generations=10_000_000,
+        num_generations=10,
         keep_parents=0,
         keep_elitism=0,
         save_best_solutions=True,
@@ -127,6 +128,7 @@ def main(params: dict[str, Any]):
 
         # Parent selection parameters
         parent_selection_type=selector.select,
+        # TODO(Vlad): Will be different for GG algorithms
         num_parents_mating=population_size,
 
         # Crossover parameters

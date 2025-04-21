@@ -21,7 +21,7 @@ class TournamentWithoutReturn(TournamentBase):
         num_copies = int(np.ceil(num_parents_mating / num_parents_in_tournament))
         fitness_indices = np.arange(last_generation_fitness.shape[0])
         
-        parents_indices = np.empty((num_parents_mating,), dtype=np.int64)
+        parents_indices = np.empty((num_copies * num_parents_in_tournament,), dtype=np.int64)
         for i in range(num_copies):
             tournament_indices = np.random.choice(
                 fitness_indices,
@@ -29,10 +29,10 @@ class TournamentWithoutReturn(TournamentBase):
                 replace=False,
             )
             tournament_fitness = last_generation_fitness[tournament_indices]
-            parents_indices[i * self.tournament_size:(i + 1) * self.tournament_size] = self.get_tournament_winner(
+            parents_indices[i * num_parents_in_tournament:(i + 1) * num_parents_in_tournament] = self.get_tournament_winner(
                 tournament_indices,
                 tournament_fitness
             )
 
-        return self.get_parents(parents_indices, ga_instance)
+        return self.get_parents(parents_indices[:num_parents_mating], ga_instance)
 
