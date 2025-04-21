@@ -242,7 +242,7 @@ def calculate_statistics(metrics: list[dict[str, Any]], key: str) -> dict[str, A
 
 
 if __name__ == "__main__":
-    for param in tqdm(PARAMETERS_SIMPLE):
-        main(param)
-    # with mp.Pool(processes=os.cpu_count()) as pool:
-    #     r = list(tqdm(pool.imap(main, PARAMETERS_SIMPLE), total=len(PARAMETERS_SIMPLE)))
+    # for param in tqdm(PARAMETERS_SIMPLE):
+    #     main(param)
+    with mp.Pool(processes=os.cpu_count()) as pool:
+        r = list(tqdm(pool.imap(main, PARAMETERS_SIMPLE), total=len(PARAMETERS_SIMPLE)))
