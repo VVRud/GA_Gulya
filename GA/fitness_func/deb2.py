@@ -3,9 +3,9 @@ from .base import BaseFitnessFunction
 from typing import List, Tuple
 
 
-class Deb4Function(BaseFitnessFunction):
+class Deb2Function(BaseFitnessFunction):
     """
-    Deb4 function is a multi-modal function with a global maximum at x = 0.08.
+    Deb2 function is a multi-modal function with a global maximum at x = 0.1.
     
     Args:
         n: The number of dimensions of the function.
@@ -28,7 +28,7 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The global maximum of the function.
         """
-        return np.ones(self.n, dtype=np.float64) * 0.08
+        return np.ones(self.n, dtype=np.float64) * 0.1
 
     def fitness_func(self, x: List[float]) -> float:
         """
@@ -69,7 +69,7 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The value of the exponential function.
         """
-        return np.exp(-2 * np.log(2) * np.power((x - 0.08) / 0.854, 2))
+        return np.exp(-2 * np.log(2) * np.power((x - 0.1) / 0.8, 2))
 
     def _sin_part(self, x: float) -> float:
         """
@@ -81,4 +81,4 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The value of the sine function.
         """
-        return np.power(np.sin(5 * np.pi * (np.power(x, 0.75) - 0.05)), 6)
+        return np.power(np.sin(5 * np.pi * x), 6)

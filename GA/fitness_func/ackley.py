@@ -3,13 +3,14 @@ from .base import BaseFitnessFunction
 from typing import List, Tuple
 
 
-class Deb4Function(BaseFitnessFunction):
+class AckleyFunction(BaseFitnessFunction):
     """
-    Deb4 function is a multi-modal function with a global maximum at x = 0.08.
+    Ackley function is a multi-modal function with a global maximum at x = 0.0.
     
     Args:
         n: The number of dimensions of the function.
     """
+
     @property
     def range(self) -> Tuple[float, float]:
         """
@@ -18,17 +19,17 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The range of the function.
         """
-        return (0.0, 1.023)
+        return (-5.12, 5.12)
 
     @property
     def global_max_x(self) -> List[float]:
         """
         Calculate the global maximum of the function.
-
+        
         Returns:
             The global maximum of the function.
         """
-        return np.ones(self.n, dtype=np.float64) * 0.08
+        return np.zeros(self.n, dtype=np.float64)
 
     def fitness_func(self, x: List[float]) -> float:
         """
@@ -40,8 +41,10 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The fitness of the individual.
         """
-        return np.sum(
-            self._exp_func(x[i]) * self._sin_part(x[i]) for i in range(self.n)
+        return 20 * np.exp(
+            -0.2 * np.sqrt(np.sum([x_i ** 2 for x_i in x]) / self.n)
+        ) + np.exp(
+            np.sum([np.cos(2 * np.pi * x_i) for x_i in x]) / self.n
         )
 
     def fitness_func_many(self, x: List[List[float]]) -> List[float]:
@@ -54,31 +57,9 @@ class Deb4Function(BaseFitnessFunction):
         Returns:
             The fitness of the individuals.
         """
-        return np.sum(
-            self._exp_func(x) * self._sin_part(x),
-            axis=1
+        return 20 * np.exp(
+            -0.2 * np.sqrt(np.sum(np.power(x, 2), axis=1) / self.n)
+        ) + np.exp(
+            np.sum(np.cos(2 * np.pi * x), axis=1) / self.n
         )
 
-    def _exp_func(self, x: float) -> float:
-        """
-        Calculate the exponential function.
-        
-        Args:
-            x: The value to calculate the exponential function of.
-            
-        Returns:
-            The value of the exponential function.
-        """
-        return np.exp(-2 * np.log(2) * np.power((x - 0.08) / 0.854, 2))
-
-    def _sin_part(self, x: float) -> float:
-        """
-        Calculate the sine function.
-        
-        Args:
-            x: The value to calculate the sine function of.
-        
-        Returns:
-            The value of the sine function.
-        """
-        return np.power(np.sin(5 * np.pi * (np.power(x, 0.75) - 0.05)), 6)

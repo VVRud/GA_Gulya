@@ -14,7 +14,7 @@ from GA.selection import (
 )
 from GA.uniform_mutation import UniformMutation
 from GA.extensions import FitnessFunctionCalculator, StopCriteria, HistoryData, PopulationGenerator
-from GA.fitness_func import Deb4Function, RastriginFunction
+from GA.fitness_func import Deb4Function, RastriginFunction, AckleyFunction, Deb2Function
 from GA.encoding import GrayEncoderDecoder, BinaryEncoderDecoder
 import logging
 import os
@@ -22,15 +22,6 @@ from typing import Any
 import json
 import multiprocessing as mp
 from pathlib import Path
-
-RESULTS_DIR = Path("results")
-RESULTS_DIR.mkdir(exist_ok=True)
-
-RESULTS_JSON_PATH = RESULTS_DIR / "json"
-RESULTS_JSON_PATH.mkdir(exist_ok=True)
-
-RESULTS_CSV_PATH = RESULTS_DIR / "csv"
-RESULTS_CSV_PATH.mkdir(exist_ok=True)
 
 level = logging.ERROR
 logger = logging.getLogger(__name__)
@@ -40,6 +31,15 @@ stream_handler.setLevel(level)
 formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
+
+RESULTS_DIR = Path("results")
+RESULTS_DIR.mkdir(exist_ok=True)
+
+RESULTS_JSON_PATH = RESULTS_DIR / "json"
+RESULTS_JSON_PATH.mkdir(exist_ok=True)
+
+RESULTS_CSV_PATH = RESULTS_DIR / "csv"
+RESULTS_CSV_PATH.mkdir(exist_ok=True)
 
 NUM_RUNS = 100
 MAX_GENERATIONS = 1_000_000
@@ -59,6 +59,8 @@ SELECTION_TYPES = {
 FITNESS_FUNCTIONS = {
     "rastrigin": {dimension: RastriginFunction(n=dimension) for dimension in [1, 2, 3, 5]},
     "deb4": {dimension: Deb4Function(n=dimension) for dimension in [1, 2, 3, 5]},
+    "ackley": {dimension: AckleyFunction(n=dimension) for dimension in [1, 2, 3, 5]},
+    "deb2": {dimension: Deb2Function(n=dimension) for dimension in [1, 2, 3, 5]},
 }
 
 # Use the first dimension for the fitness function. Encoder and decoder will be the same for all dimensions.
@@ -70,22 +72,11 @@ ENCODERS_DECODERS = {
     for fitness_function_name, fitness_function in FITNESS_FUNCTIONS.items()
 }
 
-FITNESS_FUNCTION_CALCULATORS = {
-    fitness_function_name: {
-        dimension: {
-            encoder_decoder_name: FitnessFunctionCalculator(fitness_function[dimension], encoder_decoder)
-            for encoder_decoder_name, encoder_decoder in ENCODERS_DECODERS[fitness_function_name].items()
-        }
-        for dimension in fitness_function.keys()
-    }
-    for fitness_function_name, fitness_function in FITNESS_FUNCTIONS.items()
-}
-
 POPULATIONS = {
     fitness_function_name: {
         dimension: {
             population_size: PopulationGenerator(
-                n=ENCODERS_DECODERS[fitness_function_name]["binary"].num_bits,
+                n=ENCODERS_DECODERS[fitness_function_name]["binary"].num_bits * dimension,
                 population_size=population_size,
                 num_runs=NUM_RUNS
             )
@@ -104,9 +95,10 @@ def main(params: dict[str, Any]):
     population_size = params["population"]
 
     populations = POPULATIONS[fitness_function_name][dimension][population_size]
+
     fitness_function = FITNESS_FUNCTIONS[fitness_function_name][dimension]
-    fitness_function_calculator = FITNESS_FUNCTION_CALCULATORS[fitness_function_name][dimension][encoding_type]
     encoder_decoder = ENCODERS_DECODERS[fitness_function_name][encoding_type]
+    fitness_function_calculator = FitnessFunctionCalculator(fitness_function, encoder_decoder)
 
     # Operators
     # Mutation
@@ -176,8 +168,7 @@ def main(params: dict[str, Any]):
             "Run": i + 1,
             "IsSuc": bool(is_successful),
             "NI": generations,
-            # TODO(Vlad): Add NFE
-            "NFE": 0,
+            "NFE": fitness_function_calculator.number_evaluations,
             "F_max": float(best_solution_fitness),
             "x_max": [float(x) for x in best_solution_decoded],
             "F_avg": float(history_data.avg_fitness_history[-1]),
@@ -185,6 +176,7 @@ def main(params: dict[str, Any]):
             "PA": float(y_distance),
             "DA": float(x_distance),
         })
+        fitness_function_calculator.reset()
 
     final_metrics = {
         "params": params,

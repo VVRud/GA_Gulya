@@ -12,7 +12,7 @@ class RastriginFunction(BaseFitnessFunction):
         a: The parameter of the function.
     """
     def __init__(self, n: int, a: int = 7):
-        self.n = n
+        super().__init__(n)
         self.a = a
 
     @property

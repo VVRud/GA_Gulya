@@ -7,8 +7,13 @@ from functools import lru_cache
 class BaseFitnessFunction(ABC):
     """
     Base class for fitness functions.
-    """
     
+    Args:
+        n: The number of dimensions of the fitness function.
+    """
+    def __init__(self, n: int):
+        self.n = n
+
     @property
     @abstractmethod
     def range(self) -> Tuple[float, float]:
