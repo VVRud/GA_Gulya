@@ -130,6 +130,18 @@ for (
         )
 
 print(len(FINAL_PARAMS))
+FINAL_PARAMS = sorted(FINAL_PARAMS, key=lambda x: (
+    x["dimension"],
+    x["population"],
+
+    x["fitness_function"],
+    x["encoding_type"],
+
+    x["parent_selection_type"]["name"],
+    x["crossover_type"],
+    x["crossover_probability"],
+    x["mutation_probability"])
+)
 
 with open("simple_params.json", "w") as f:
-    json.dump(FINAL_PARAMS, f)
+    json.dump(FINAL_PARAMS, f, indent=4)

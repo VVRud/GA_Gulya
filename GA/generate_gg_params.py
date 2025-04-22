@@ -29,7 +29,7 @@ GENERATION_GAP = [0.05, 0.1, 0.2, 0.5]
 
 PARENT_SELECTION_TYPES = ["elite", "rws"]
 
-NEXT_GENERATION_SELECTION_TYPES = ["no_worst", "no_worst_parents"]
+NEXT_GENERATION_SELECTION_TYPES = ["worst_comma", "rand_comma", "worst_plus", "rand_plus"]
 
 FINAL_PARAMS = []
 for (
@@ -72,5 +72,22 @@ for (
         })
 
 print(len(FINAL_PARAMS))
+
+FINAL_PARAMS = sorted(FINAL_PARAMS, key=lambda x: (
+    x["population"],
+    x["dimension"],
+
+    x["fitness_function"],
+    x["encoding_type"],
+
+    x["generation_gap"],
+    x["parent_selection_type"],
+    x["next_generation_selection_type"],
+
+    x["crossover_type"],
+    x["crossover_probability"],
+    x["mutation_probability"],
+))
+
 with open("gg_params.json", "w") as f:
-    json.dump(FINAL_PARAMS, f)
+    json.dump(FINAL_PARAMS, f, indent=4)
