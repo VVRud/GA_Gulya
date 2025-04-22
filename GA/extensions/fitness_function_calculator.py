@@ -1,7 +1,8 @@
 import pygad
 from GA.fitness_func.base import BaseFitnessFunction
 from GA.encoding import BaseEncoderDecoder
-from typing import List
+from typing import List, Union
+import numpy as np
 
 
 class FitnessFunctionCalculator:
@@ -18,7 +19,7 @@ class FitnessFunctionCalculator:
         
         self.number_evaluations = 0
 
-    def fitness(self, pygad_instance: pygad.GA, solution: List[int] | List[List[int]], solution_idx: int) -> float | List[float]:
+    def fitness(self, pygad_instance: pygad.GA, solution: Union[np.ndarray, List[int]], solution_idx: int) -> Union[float, List[float]]:
         """
         Calculate the fitness of an individual.
         
@@ -29,16 +30,18 @@ class FitnessFunctionCalculator:
         Returns:
             The fitness of the individual/individuals.
         """
+        # Detect if we're processing a single solution or batch
         if len(solution.shape) == 1:
             decoded = self.encoder_decoder.decode(solution)
-            fitness = self.fitness_function.fitness_func(decoded)
+            fitness_value = self.fitness_function.fitness_func(decoded)
             self.number_evaluations += 1
+            return fitness_value
         else:
             decoded = self.encoder_decoder.decode_many(solution)
-            fitness = self.fitness_function.fitness_func_many(decoded)
+            fitness_values = self.fitness_function.fitness_func_many(decoded)
             self.number_evaluations += solution.shape[0]
-        return fitness
-    
+            return fitness_values
+
     def reset(self) -> None:
         """
         Reset the number of evaluations.

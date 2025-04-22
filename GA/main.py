@@ -18,11 +18,13 @@ from GA.fitness_func import Deb4Function, RastriginFunction, AckleyFunction, Deb
 from GA.encoding import GrayEncoderDecoder, BinaryEncoderDecoder
 import logging
 import os
-from typing import Any
+from typing import Any, Dict, List
 import json
 import multiprocessing as mp
 from pathlib import Path
+import functools
 
+# Optimize logging - set it up once at startup and disable debug-level logging
 level = logging.ERROR
 logger = logging.getLogger(__name__)
 logger.setLevel(level)
@@ -32,6 +34,7 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt=
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+# Pre-create directories
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
 
@@ -41,29 +44,34 @@ RESULTS_JSON_PATH.mkdir(exist_ok=True)
 RESULTS_CSV_PATH = RESULTS_DIR / "csv"
 RESULTS_CSV_PATH.mkdir(exist_ok=True)
 
+# Constants
 NUM_RUNS = 100
 MAX_GENERATIONS = 1_000_000
+CPU_COUNT = os.cpu_count()
 
+# Cache selection types to avoid repeated lookups
 SELECTION_TYPES = {
     "rws": RWSSelection,
     "sus": SUSSelection,
     "lin_rank_rws": LinearRankRWSSelection,
     "exp_rank_rws": ExponentialRankRWSSelection,
-    "lin_rank_sus": LinearRankSUSSelection,
+    "lin_rank_sus": LinearRankSUSSelection, 
     "exp_rank_sus": ExponentialRankSUSSelection,
     "tour_with": TournamentWithReturn,
     "tour_without": TournamentWithoutReturn,
     "tour_with_partial": TournamentWithPartialReturn,
 }
 
+# Pre-calculate fitness functions for all dimensions
+DIMENSIONS = [1, 2, 3, 5]
 FITNESS_FUNCTIONS = {
-    "rastrigin": {dimension: RastriginFunction(n=dimension) for dimension in [1, 2, 3, 5]},
-    "deb4": {dimension: Deb4Function(n=dimension) for dimension in [1, 2, 3, 5]},
-    "ackley": {dimension: AckleyFunction(n=dimension) for dimension in [1, 2, 3, 5]},
-    "deb2": {dimension: Deb2Function(n=dimension) for dimension in [1, 2, 3, 5]},
+    "rastrigin": {dimension: RastriginFunction(n=dimension) for dimension in DIMENSIONS},
+    "deb4": {dimension: Deb4Function(n=dimension) for dimension in DIMENSIONS},
+    "ackley": {dimension: AckleyFunction(n=dimension) for dimension in DIMENSIONS},
+    "deb2": {dimension: Deb2Function(n=dimension) for dimension in DIMENSIONS},
 }
 
-# Use the first dimension for the fitness function. Encoder and decoder will be the same for all dimensions.
+# Pre-calculate encoders/decoders
 ENCODERS_DECODERS = {
     fitness_function_name: {
         "gray": GrayEncoderDecoder(values_range=fitness_function[1].range, points_after_decimal=2),
@@ -72,6 +80,8 @@ ENCODERS_DECODERS = {
     for fitness_function_name, fitness_function in FITNESS_FUNCTIONS.items()
 }
 
+# Pre-generate populations
+POPULATION_SIZES = [100, 200, 300, 400]
 POPULATIONS = {
     fitness_function_name: {
         dimension: {
@@ -80,53 +90,56 @@ POPULATIONS = {
                 population_size=population_size,
                 num_runs=NUM_RUNS
             )
-            for population_size in [100, 200, 300, 400]
+            for population_size in POPULATION_SIZES
         }
         for dimension in fitness_function.keys()
     }
     for fitness_function_name, fitness_function in FITNESS_FUNCTIONS.items()
 }
 
+@functools.lru_cache(maxsize=128)
+def get_selector(selector_name, selector_param):
+    """Cache selector instances for reuse"""
+    selector_type = SELECTION_TYPES[selector_name]
+    if selector_param is not None:
+        return selector_type(selector_param)
+    return selector_type()
 
-def main(params: dict[str, Any]):
+def main(params: Dict[str, Any]):
+    # Extract parameters once
     fitness_function_name = params["fitness_function"]
     dimension = params["dimension"]
     encoding_type = params["encoding_type"]
     population_size = params["population"]
+    mutation_probability = params["mutation_probability"]
+    crossover_type = params["crossover_type"]
+    crossover_probability = params["crossover_probability"]
+    selector_name = params["parent_selection_type"]["name"]
+    selector_param = params["parent_selection_type"]["param"]
 
+    # Get pre-computed objects
     populations = POPULATIONS[fitness_function_name][dimension][population_size]
-
     fitness_function = FITNESS_FUNCTIONS[fitness_function_name][dimension]
     encoder_decoder = ENCODERS_DECODERS[fitness_function_name][encoding_type]
     fitness_function_calculator = FitnessFunctionCalculator(fitness_function, encoder_decoder)
-
-    # Operators
-    # Mutation
-    mutator = UniformMutation(mutation_probability=params["mutation_probability"])
     
-    # Parent selection
-    selector_name = params["parent_selection_type"]["name"]
-    selector_param = params["parent_selection_type"]["param"]
-    selector_type = SELECTION_TYPES[selector_name]
-    if selector_param is not None:
-        selector = selector_type(selector_param)
-    else:
-        selector = selector_type()
+    # Initialize operators
+    mutator = UniformMutation(mutation_probability=mutation_probability)
+    selector = get_selector(selector_name, selector_param)
 
-    # Crossover
-    crossover_type = params["crossover_type"]
-    crossover_probability = params["crossover_probability"]
-
+    # Pre-allocate metrics list with expected size
     metrics = []
+    metrics_append = metrics.append  # Local reference for faster appends
+
     for i in range(NUM_RUNS):
-        # Stop criteria and history data
+        # Initialize per-run objects
         history_data = HistoryData(log_step=100)
         stop_criteria = StopCriteria(history_data, max_generations=MAX_GENERATIONS)
 
         ga_instance = GA(
             # Basic parameters
             logger=logger,
-            parallel_processing=["thread", int(os.cpu_count())],
+            parallel_processing=["thread", CPU_COUNT],
             num_generations=10_000_000,
             keep_parents=0,
             keep_elitism=0,
@@ -140,7 +153,6 @@ def main(params: dict[str, Any]):
 
             # Parent selection parameters
             parent_selection_type=selector.select,
-            # TODO(Vlad): Will be different for GG algorithms
             num_parents_mating=population_size,
 
             # Crossover parameters
@@ -154,17 +166,25 @@ def main(params: dict[str, Any]):
             fitness_batch_size=population_size,
             on_generation=stop_criteria.stop_condition
         )
-        logger.info(ga_instance.summary())
+        
+        # Skip unnecessary logging during run
+        if logger.level <= logging.INFO:
+            logger.info(ga_instance.summary())
+            
         ga_instance.run()
 
+        # Get results efficiently
         best_solution, best_solution_fitness, _ = ga_instance.best_solution()
         best_solution_decoded = encoder_decoder.decode(best_solution)
         
+        # Calculate metrics
         generations = ga_instance.generations_completed
         x_distance = np.linalg.norm(best_solution_decoded - fitness_function.global_max_x)
         y_distance = abs(best_solution_fitness - fitness_function.global_max_y)
         is_successful = stop_criteria.is_converged and (x_distance < 0.01) and (y_distance < 0.01)
-        metrics.append({
+        
+        # Use float() for NumPy values to avoid serialization issues
+        metrics_append({
             "Run": i + 1,
             "IsSuc": bool(is_successful),
             "NI": generations,
@@ -178,11 +198,16 @@ def main(params: dict[str, Any]):
         })
         fitness_function_calculator.reset()
 
+    # Calculate summary once at the end
+    summary = calculate_summary_metrics(metrics)
+    
     final_metrics = {
         "params": params,
         "metrics": metrics,
-        "summary": calculate_summary_metrics(metrics),
+        "summary": summary,
     }
+    
+    # Create filename once
     filename = "__".join([
         str(params["population"]),
         params["fitness_function"],
@@ -193,35 +218,50 @@ def main(params: dict[str, Any]):
         str(params["crossover_probability"]),
         str(params["mutation_probability"]),
     ]) + ".json"
+    
+    # Write results in a single operation
     with open(RESULTS_JSON_PATH / filename, "w") as f:
         json.dump(final_metrics, f, indent=4)
 
     return final_metrics
 
 
-def calculate_summary_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
-    successful_runs = [m for m in metrics if m["IsSuc"]]
-    failed_runs = [m for m in metrics if not m["IsSuc"]]
+def calculate_summary_metrics(metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate summary statistics from metrics"""
+    # Use numpy operations for efficiency
+    is_successful = np.array([m["IsSuc"] for m in metrics])
+    successful_mask = is_successful == True
+    failed_mask = ~successful_mask
+    
+    successful_runs = [m for i, m in enumerate(metrics) if successful_mask[i]]
+    failed_runs = [m for i, m in enumerate(metrics) if failed_mask[i]]
+    
     statistics_metrics = {
-        "Suc": len(successful_runs) / len(metrics),
+        "Suc": float(np.sum(successful_mask)) / len(metrics),
         "Failed": {},
         "Successful": {},
     }
+    
+    # Calculate statistics for both groups at once
     for key in ["NI", "NFE", "F_max", "F_avg", "FC", "PA", "DA"]:
         statistics_metrics["Failed"][key] = calculate_statistics(failed_runs, key)
         statistics_metrics["Successful"][key] = calculate_statistics(successful_runs, key)
+    
     return statistics_metrics
 
 
-def calculate_statistics(metrics: list[dict[str, Any]], key: str) -> dict[str, Any]:
-    metrics_values = [m[key] for m in metrics]
-    if len(metrics_values) == 0:
+def calculate_statistics(metrics: List[Dict[str, Any]], key: str) -> Dict[str, Any]:
+    """Calculate statistics for a specific metric key"""
+    if not metrics:
         return {
             f"Min__{key}": None,
             f"Max__{key}": None,
             f"Avg__{key}": None,
             f"Sigma__{key}": None,
         }
+    
+    # Use numpy for efficient statistical calculations
+    metrics_values = np.array([m[key] for m in metrics])
     return {
         f"Min__{key}": float(np.min(metrics_values)),
         f"Max__{key}": float(np.max(metrics_values)),
@@ -231,14 +271,13 @@ def calculate_statistics(metrics: list[dict[str, Any]], key: str) -> dict[str, A
 
 
 if __name__ == "__main__":
+    # Load parameters once
     with open("simple_params.json", "r") as f:
         parameters_simple = json.load(f)
 
     params_key = input("Enter the key: ")
     params = parameters_simple[params_key]
 
-    # for param in tqdm(params):
-    #     main(param)
-
-    with mp.Pool(processes=os.cpu_count()) as pool:
+    # Run all parameter combinations in parallel using a process pool
+    with mp.Pool(processes=CPU_COUNT) as pool:
         r = list(tqdm(pool.imap(main, params), total=len(params)))

@@ -19,11 +19,14 @@ class HistoryData:
         self.start_time = self.last_time
 
     @property
-    def avg_gomogenity_history(self) -> List[float]:
+    def avg_gomogenity_history(self) -> np.ndarray:
         """
         The average gomogenity of the population.
         """
-        return np.array(self.gomogenity_history).mean(axis=1)
+        # Convert to numpy array only once if needed
+        if not self.gomogenity_history:
+            return np.array([])
+        return np.mean(self.gomogenity_history, axis=1)
     
     def extend(self, pygad_instance: pygad.GA) -> None:
         """
@@ -32,9 +35,12 @@ class HistoryData:
         Args:
             pygad_instance: The pygad instance.
         """
+        # Extend history first to ensure data is available
+        self._extend_history(pygad_instance)
+        
+        # Only log if needed
         if self.log_step and pygad_instance.generations_completed % self.log_step == 0:
             self._log_step(pygad_instance)
-        self._extend_history(pygad_instance)
 
     def _extend_history(self, pygad_instance: pygad.GA) -> None:
         """
@@ -46,15 +52,6 @@ class HistoryData:
         self.gomogenity_history.append(self._calculate_gomogenity(pygad_instance))
         self.avg_fitness_history.append(self._calculate_average_fitness(pygad_instance))
 
-    def _calculate_average_fitness(self, pygad_instance: pygad.GA) -> float:
-        """
-        Calculate the average fitness of the population.
-        
-        Args:
-            pygad_instance: The pygad instance.
-        """
-        return pygad_instance.last_generation_fitness.mean()
-
     def _calculate_gomogenity(self, pygad_instance: pygad.GA) -> List[float]:
         """
         Calculate the gomogenity of the population.
@@ -65,9 +62,17 @@ class HistoryData:
         gomogenity_by_1 = pygad_instance.population.mean(axis=0)
         gomogenity_by_0 = 1 - gomogenity_by_1
         stacked_gomogenity = np.vstack((gomogenity_by_1, gomogenity_by_0))
-        max_gomogenity_by_gene = stacked_gomogenity.max(axis=0)
-        return max_gomogenity_by_gene
-    
+        return stacked_gomogenity.max(axis=0)
+
+    def _calculate_average_fitness(self, pygad_instance: pygad.GA) -> float:
+        """
+        Calculate the average fitness of the population.
+        
+        Args:
+            pygad_instance: The pygad instance.
+        """
+        return np.mean(pygad_instance.last_generation_fitness)
+
     def _log_step(self, pygad_instance: pygad.GA) -> None:
         """
         Log the step of the population.
