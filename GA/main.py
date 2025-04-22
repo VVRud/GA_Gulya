@@ -96,9 +96,6 @@ POPULATIONS = {
     for fitness_function_name, fitness_function in FITNESS_FUNCTIONS.items()
 }
 
-with open("simple_params.json", "r") as f:
-    PARAMETERS_SIMPLE = json.load(f)
-
 
 def main(params: dict[str, Any]):
     fitness_function_name = params["fitness_function"]
@@ -242,7 +239,14 @@ def calculate_statistics(metrics: list[dict[str, Any]], key: str) -> dict[str, A
 
 
 if __name__ == "__main__":
-    # for param in tqdm(PARAMETERS_SIMPLE):
+    with open("simple_params.json", "r") as f:
+        parameters_simple = json.load(f)
+
+    params_key = input("Enter the key: ")
+    params = parameters_simple[params_key]
+
+    # for param in tqdm(params):
     #     main(param)
+
     with mp.Pool(processes=os.cpu_count()) as pool:
-        r = list(tqdm(pool.imap(main, PARAMETERS_SIMPLE), total=len(PARAMETERS_SIMPLE)))
+        r = list(tqdm(pool.imap(main, params), total=len(params)))

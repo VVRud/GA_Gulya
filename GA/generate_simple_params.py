@@ -8,9 +8,14 @@ DIMENSIONS = [1, 2, 3, 5]
 
 ENCODING_TYPES = ["binary", "gray"]
 
-FITNESS_FUNCTIONS = [
+V1_FITNESS_FUNCTIONS = [
     "rastrigin",
     "deb4",
+]
+
+V2_FITNESS_FUNCTIONS = [
+    "ackley",
+    "deb2",
 ]
 
 CROSSOVER_TYPES = ["single_point", "uniform"]
@@ -89,16 +94,14 @@ for population in POPULATION_SIZES:
                         "param": exponent
                     })
 
-FINAL_PARAMS = []
+BASE_PARAMS = []
 for (
-    fitness_function,
     dimension,
     encoding_type,
     crossover_type,
     crossover_probability,
     population
 ) in itertools.product(
-    FITNESS_FUNCTIONS,
     DIMENSIONS,
     ENCODING_TYPES,
     CROSSOVER_TYPES,
@@ -112,11 +115,10 @@ for (
         MUTATION_PROBABILITIES[population],
         PARENT_SELECTION_TYPES[population]
     ):
-        FINAL_PARAMS.append(
+        BASE_PARAMS.append(
             {
                 "population": population,
                 
-                "fitness_function": fitness_function,
                 "dimension": dimension,
                 "encoding_type": encoding_type,
 
@@ -129,8 +131,36 @@ for (
             }
         )
 
-print(len(FINAL_PARAMS))
-FINAL_PARAMS = sorted(FINAL_PARAMS, key=lambda x: (
+FINAL_PARAMS = {
+    "v1": [
+        {**base_param, "fitness_function": fitness_function}
+        for base_param in BASE_PARAMS
+        for fitness_function in V1_FITNESS_FUNCTIONS
+        ],
+    "v2": [
+        {**base_param, "fitness_function": fitness_function}
+        for base_param in BASE_PARAMS
+        for fitness_function in V2_FITNESS_FUNCTIONS
+    ],
+}
+
+for k, v in FINAL_PARAMS.items():
+    print(k, len(v))
+
+FINAL_PARAMS["v1"] = sorted(FINAL_PARAMS["v1"], key=lambda x: (
+    x["dimension"],
+    x["population"],
+
+    x["fitness_function"],
+    x["encoding_type"],
+
+    x["parent_selection_type"]["name"],
+    x["crossover_type"],
+    x["crossover_probability"],
+    x["mutation_probability"])
+)
+
+FINAL_PARAMS["v2"] = sorted(FINAL_PARAMS["v2"], key=lambda x: (
     x["dimension"],
     x["population"],
 
