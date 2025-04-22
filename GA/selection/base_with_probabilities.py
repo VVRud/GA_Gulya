@@ -1,12 +1,16 @@
-from .base_selection import BaseSelection
+from abc import ABC
+
 import numpy as np
-from abc import ABC, abstractmethod
+
+from .base_selection import BaseSelection
 
 
 class BaseWithProbabilities(BaseSelection, ABC):
     """Base class for selection methods that use probabilities."""
-    
-    def get_probabilities(self, last_generation_fitness: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+
+    def get_probabilities(
+        self, last_generation_fitness: np.ndarray[np.float64]
+    ) -> np.ndarray[np.float64]:
         """
         Get the probabilities of the solutions.
         """

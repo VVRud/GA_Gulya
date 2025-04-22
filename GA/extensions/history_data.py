@@ -1,19 +1,20 @@
-import pygad
-import numpy as np
 import time
-from typing import Optional, List
+
+import numpy as np
+import pygad
 
 
 class HistoryData:
     """
     History data for the genetic algorithm.
-    
+
     Args:
         log_step: The step to log the history.
     """
-    def __init__(self, log_step: Optional[int] = 100):
-        self.gomogenity_history: List[List[float]] = []
-        self.avg_fitness_history: List[float] = []
+
+    def __init__(self, log_step: int | None = 100):
+        self.gomogenity_history: list[list[float]] = []
+        self.avg_fitness_history: list[float] = []
         self.log_step = log_step
         self.last_time = time.monotonic()
         self.start_time = self.last_time
@@ -27,17 +28,17 @@ class HistoryData:
         if not self.gomogenity_history:
             return np.array([])
         return np.mean(self.gomogenity_history, axis=1)
-    
+
     def extend(self, pygad_instance: pygad.GA) -> None:
         """
         Extend the history data from the pygad instance.
-        
+
         Args:
             pygad_instance: The pygad instance.
         """
         # Extend history first to ensure data is available
         self._extend_history(pygad_instance)
-        
+
         # Only log if needed
         if self.log_step and pygad_instance.generations_completed % self.log_step == 0:
             self._log_step(pygad_instance)
@@ -45,17 +46,17 @@ class HistoryData:
     def _extend_history(self, pygad_instance: pygad.GA) -> None:
         """
         Extend the history data.
-        
+
         Args:
             pygad_instance: The pygad instance.
         """
         self.gomogenity_history.append(self._calculate_gomogenity(pygad_instance))
         self.avg_fitness_history.append(self._calculate_average_fitness(pygad_instance))
 
-    def _calculate_gomogenity(self, pygad_instance: pygad.GA) -> List[float]:
+    def _calculate_gomogenity(self, pygad_instance: pygad.GA) -> list[float]:
         """
         Calculate the gomogenity of the population.
-        
+
         Args:
             pygad_instance: The pygad instance.
         """
@@ -67,7 +68,7 @@ class HistoryData:
     def _calculate_average_fitness(self, pygad_instance: pygad.GA) -> float:
         """
         Calculate the average fitness of the population.
-        
+
         Args:
             pygad_instance: The pygad instance.
         """
@@ -76,7 +77,7 @@ class HistoryData:
     def _log_step(self, pygad_instance: pygad.GA) -> None:
         """
         Log the step of the population.
-        
+
         Args:
             pygad_instance: The pygad instance.
         """
@@ -95,6 +96,7 @@ class HistoryData:
         Plot the gomogenity of the population.
         """
         import matplotlib.pyplot as plt
+
         plt.figure(figsize=(10, 16))
         plt.plot(self.avg_gomogenity_history)
         plt.title("Gomogenity of the population")
@@ -107,6 +109,7 @@ class HistoryData:
         Plot the fitness of the population.
         """
         import matplotlib.pyplot as plt
+
         plt.figure(figsize=(10, 16))
         plt.plot(self.avg_fitness_history)
         plt.title("Fitness of the population")

@@ -1,27 +1,28 @@
 import numpy as np
+
 from .base import BaseFitnessFunction
-from typing import List, Tuple
 
 
 class Deb2Function(BaseFitnessFunction):
     """
     Deb2 function is a multi-modal function with a global maximum at x = 0.1.
-    
+
     Args:
         n: The number of dimensions of the function.
     """
+
     @property
-    def range(self) -> Tuple[float, float]:
+    def range(self) -> tuple[float, float]:
         """
         Calculate the range of the function.
-        
+
         Returns:
             The range of the function.
         """
         return (0.0, 1.023)
 
     @property
-    def global_max_x(self) -> List[float]:
+    def global_max_x(self) -> list[float]:
         """
         Calculate the global maximum of the function.
 
@@ -30,13 +31,13 @@ class Deb2Function(BaseFitnessFunction):
         """
         return np.ones(self.n, dtype=np.float64) * 0.1
 
-    def fitness_func(self, x: List[float]) -> float:
+    def fitness_func(self, x: list[float]) -> float:
         """
         Calculate the fitness of an individual.
-        
+
         Args:
             x: The individual to calculate the fitness of.
-            
+
         Returns:
             The fitness of the individual.
         """
@@ -44,28 +45,25 @@ class Deb2Function(BaseFitnessFunction):
             self._exp_func(x[i]) * self._sin_part(x[i]) for i in range(self.n)
         )
 
-    def fitness_func_many(self, x: List[List[float]]) -> List[float]:
+    def fitness_func_many(self, x: list[list[float]]) -> list[float]:
         """
         Calculate the fitness of many individuals.
-        
+
         Args:
             x: The individuals to calculate the fitness of.
-            
+
         Returns:
             The fitness of the individuals.
         """
-        return np.sum(
-            self._exp_func(x) * self._sin_part(x),
-            axis=1
-        )
+        return np.sum(self._exp_func(x) * self._sin_part(x), axis=1)
 
     def _exp_func(self, x: float) -> float:
         """
         Calculate the exponential function.
-        
+
         Args:
             x: The value to calculate the exponential function of.
-            
+
         Returns:
             The value of the exponential function.
         """
@@ -74,10 +72,10 @@ class Deb2Function(BaseFitnessFunction):
     def _sin_part(self, x: float) -> float:
         """
         Calculate the sine function.
-        
+
         Args:
             x: The value to calculate the sine function of.
-        
+
         Returns:
             The value of the sine function.
         """

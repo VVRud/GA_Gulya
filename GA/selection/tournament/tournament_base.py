@@ -1,15 +1,18 @@
-from GA.selection.base_selection import BaseSelection
 import numpy as np
 import pygad
-from typing import Tuple
+
+from GA.selection.base_selection import BaseSelection
 
 
 class TournamentBase(BaseSelection):
     """Base class for tournament selection methods."""
+
     def __init__(self, tournament_size: int):
         self.tournament_size = tournament_size
 
-    def get_tournament_winner(self, tournament_indices: np.ndarray, tournament_fitness: np.ndarray) -> np.ndarray:
+    def get_tournament_winner(
+        self, tournament_indices: np.ndarray, tournament_fitness: np.ndarray
+    ) -> np.ndarray:
         """
         Get indices of tournament winners.
         Args:
@@ -19,9 +22,13 @@ class TournamentBase(BaseSelection):
             Indices of the tournament winners.
         """
         tournament_winner_indices = np.argmax(tournament_fitness, axis=1)
-        return tournament_indices[np.arange(len(tournament_winner_indices)), tournament_winner_indices]
+        return tournament_indices[
+            np.arange(len(tournament_winner_indices)), tournament_winner_indices
+        ]
 
-    def get_parents(self, parents_indices: np.ndarray, ga_instance: pygad.GA) -> Tuple[np.ndarray, np.ndarray]:
+    def get_parents(
+        self, parents_indices: np.ndarray, ga_instance: pygad.GA
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Get parent chromosomes from indices.
         Args:

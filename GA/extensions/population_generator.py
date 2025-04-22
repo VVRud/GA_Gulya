@@ -1,5 +1,4 @@
 import numpy as np
-from typing import List
 
 
 class PopulationGenerator:
@@ -22,15 +21,16 @@ class PopulationGenerator:
         # For binary values (0,1), random integers are faster than random uniform
         # Pre-allocate the entire array at once to avoid multiple allocations
         self.populations = np.random.randint(
-            0, 2, 
-            size=(self.num_runs, self.population_size, self.n), 
-            dtype=np.int8  # Use smallest integer type to save memory
+            0,
+            2,
+            size=(self.num_runs, self.population_size, self.n),
+            dtype=np.int8,  # Use smallest integer type to save memory
         )
 
     def __getitem__(self, run_number: int) -> np.ndarray:
         """
         Get the population for a specific run.
-        
+
         Args:
             run_number: The run number.
         Returns:

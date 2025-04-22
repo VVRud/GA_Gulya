@@ -1,19 +1,21 @@
-from typing import Tuple
+from abc import ABC, abstractmethod
+
 import numpy as np
 import pygad
-from abc import ABC, abstractmethod
+
 
 class BaseSelection(ABC):
     """
     Base class for all selection methods.
     """
+
     @abstractmethod
     def select(
         self,
         last_generation_fitness: np.ndarray[np.float64],
         num_parents_mating: int,
         ga_instance: pygad.GA,
-    ) -> Tuple[np.ndarray[np.int64, np.int64], np.ndarray[np.int64]]:
+    ) -> tuple[np.ndarray[np.int64, np.int64], np.ndarray[np.int64]]:
         """
         Select the parents for the next generation.
 

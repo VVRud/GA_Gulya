@@ -1,3 +1,7 @@
+tqdm
 pygad
 numpy
 pandas
+
+ruff
+pytest

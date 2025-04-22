@@ -1,28 +1,36 @@
-import pygad
-from GA.fitness_func.base import BaseFitnessFunction
-from GA.encoding import BaseEncoderDecoder
-from typing import List, Union
 import numpy as np
+import pygad
+
+from GA.encoding import BaseEncoderDecoder
+from GA.fitness_func.base import BaseFitnessFunction
 
 
 class FitnessFunctionCalculator:
     """
     Fitness function calculator for a population of individuals.
-    
+
     Args:
         fitness_function: The fitness function to use.
         encoder_decoder: The encoder decoder to use.
     """
-    def __init__(self, fitness_function: BaseFitnessFunction, encoder_decoder: BaseEncoderDecoder):
+
+    def __init__(
+        self, fitness_function: BaseFitnessFunction, encoder_decoder: BaseEncoderDecoder
+    ):
         self.fitness_function = fitness_function
         self.encoder_decoder = encoder_decoder
-        
+
         self.number_evaluations = 0
 
-    def fitness(self, pygad_instance: pygad.GA, solution: Union[np.ndarray, List[int]], solution_idx: int) -> Union[float, List[float]]:
+    def fitness(
+        self,
+        pygad_instance: pygad.GA,
+        solution: np.ndarray | list[int],
+        solution_idx: int,
+    ) -> float | list[float]:
         """
         Calculate the fitness of an individual.
-        
+
         Args:
             pygad_instance: The pygad instance.
             solution: The solution to calculate the fitness of.
