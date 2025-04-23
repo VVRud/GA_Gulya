@@ -1,5 +1,5 @@
 import numpy as np
-
+from pathlib import Path
 
 class PopulationGenerator:
     def __init__(self, n: int, population_size: int, num_runs: int, populations_path: Path):
