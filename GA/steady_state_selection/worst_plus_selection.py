@@ -6,9 +6,10 @@ from .base_selection import BaseSelection
 
 class WorstPlusSelection(BaseSelection):
     """
-    Select the best individuals from the concatenation of the population and the offsprings.
-    This is a (μ+λ) selection strategy where the best individuals from both parents and
-    offsprings are selected for the next generation.
+    Select the best individuals from the concatenation of the population and
+    the offsprings.
+    This is a (μ+λ) selection strategy where the best individuals from both
+    parents and offsprings are selected for the next generation.
     """
 
     def select(

@@ -6,9 +6,10 @@ from .base_selection import BaseSelection
 
 class RandomPlusSelection(BaseSelection):
     """
-    Remove random individuals from the concatenation of the population and the offsprings.
-    This is a (μ+λ) selection strategy where random individuals from both parents and
-    offsprings are selected for the next generation.
+    Remove random individuals from the concatenation of the population and
+    the offsprings.
+    This is a (μ+λ) selection strategy where random individuals from both
+    parents and offsprings are selected for the next generation.
     """
 
     def select(

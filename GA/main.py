@@ -1,5 +1,6 @@
 import json
 import logging
+import multiprocessing as mp
 import os
 from pathlib import Path
 from typing import Any
@@ -67,8 +68,7 @@ RESULTS_CSV_PATH = RESULTS_DIR / "csv"
 RESULTS_CSV_PATH.mkdir(exist_ok=True)
 
 # Constants
-# NUM_RUNS = 100
-NUM_RUNS = 1
+NUM_RUNS = 100
 CPU_COUNT = os.cpu_count()
 
 # Cache selection types to avoid repeated lookups
@@ -197,8 +197,7 @@ def main(params: dict[str, Any]):
             # Basic parameters
             logger=logger,
             parallel_processing=["thread", CPU_COUNT],
-            num_generations=1,
-            # num_generations=10_000_000,
+            num_generations=10_000_000,
             keep_parents=0,
             keep_elitism=0,
             save_best_solutions=True,
@@ -211,9 +210,9 @@ def main(params: dict[str, Any]):
             parent_selection_type=parent_selector.select,
             num_parents_mating=population_size,
             with_steady_state=with_steady_state,
-            steady_state_selection_type=steady_state_selector.select
-            if with_steady_state
-            else None,
+            steady_state_selection_type=(
+                steady_state_selector.select if with_steady_state else None
+            ),
             # Crossover parameters
             crossover_type=crossover_type,
             crossover_probability=crossover_probability,
@@ -358,7 +357,7 @@ if __name__ == "__main__":
     params = parameters_simple[params_key]
 
     # Run all parameter combinations in parallel using a process pool
-    for param in tqdm(params):
-        main(param)
-    # with mp.Pool(processes=CPU_COUNT) as pool:
-    #     r = list(tqdm(pool.imap(main, params), total=len(params)))
+    # for param in tqdm(params):
+    #     main(param)
+    with mp.Pool(processes=CPU_COUNT) as pool:
+        r = list(tqdm(pool.imap(main, params), total=len(params)))
