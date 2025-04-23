@@ -36,10 +36,19 @@ BASE_PARENT_SELECTION_TYPES = [
     {"name": "simple", "parent_selection_type": {"name": "sus", "param": None}},
     {"name": "rws", "parent_selection_type": {"name": "rws", "param": None}},
     {"name": "tour_with", "parent_selection_type": {"name": "tour_with", "param": 2}},
-    {"name": "tour_without", "parent_selection_type": {"name": "tour_without", "param": 2}},
-    {"name": "tour_with_partial", "parent_selection_type": {"name": "tour_with_partial", "param": 2}},
+    {
+        "name": "tour_without",
+        "parent_selection_type": {"name": "tour_without", "param": 2},
+    },
+    {
+        "name": "tour_with_partial",
+        "parent_selection_type": {"name": "tour_with_partial", "param": 2},
+    },
     {"name": "tour_with", "parent_selection_type": {"name": "tour_with", "param": 4}},
-    {"name": "tour_without", "parent_selection_type": {"name": "tour_without", "param": 4}},
+    {
+        "name": "tour_without",
+        "parent_selection_type": {"name": "tour_without", "param": 4},
+    },
 ]
 
 BASE_TYPES = ["rws", "sus"]
@@ -62,12 +71,24 @@ for population in POPULATION_SIZES:
             if rank_type == "exp":
                 for exponent in EXP_RANK_EXPONENTS[population]:
                     SELECTION_TYPES[population].append(
-                        {"name": "simple", "parent_selection_type": {"name": f"{rank_type}_rank_{base_type}", "param": exponent}}
+                        {
+                            "name": "simple",
+                            "parent_selection_type": {
+                                "name": f"{rank_type}_rank_{base_type}",
+                                "param": exponent,
+                            },
+                        }
                     )
             elif rank_type == "lin":
                 for exponent in LIN_RANK_EXPONENTS:
                     SELECTION_TYPES[population].append(
-                        {"name": "simple", "parent_selection_type": {"name": f"{rank_type}_rank_{base_type}", "param": exponent}}
+                        {
+                            "name": "simple",
+                            "parent_selection_type": {
+                                "name": f"{rank_type}_rank_{base_type}",
+                                "param": exponent,
+                            },
+                        }
                     )
 
 BASE_PARAMS = []

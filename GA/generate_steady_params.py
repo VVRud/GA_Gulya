@@ -46,7 +46,10 @@ SELECTION_TYPES = [
     {
         "name": "steady",
         "parent_selection_type": {"name": parent_selection_type, "param": None},
-        "next_generation_selection_type": {"name": next_generation_selection_type, "param": None},
+        "next_generation_selection_type": {
+            "name": next_generation_selection_type,
+            "param": None,
+        },
     }
     for parent_selection_type, next_generation_selection_type in itertools.product(
         PARENT_SELECTION_TYPES, NEXT_GENERATION_SELECTION_TYPES
@@ -76,7 +79,9 @@ for (
             {
                 "max_generations": int(MAX_GENERATIONS * generation_gap),
                 "parents_mating": int(population * generation_gap),
-                "history_check_generations": int(HISTORY_CHECK_GENERATIONS * population / generation_gap),
+                "history_check_generations": int(
+                    HISTORY_CHECK_GENERATIONS * population / generation_gap
+                ),
                 "population": population,
                 "dimension": dimension,
                 "encoding_type": encoding_type,

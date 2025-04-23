@@ -1,13 +1,19 @@
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+
+
 class PopulationGenerator:
-    def __init__(self, n: int, population_size: int, num_runs: int, populations_path: Path):
+    def __init__(
+        self, n: int, population_size: int, num_runs: int, populations_path: Path
+    ):
         self.n = n
         self.population_size = population_size
         self.num_runs = num_runs
         self.populations = None
-        self.populations_path = populations_path
+        self.populations_path = (
+            populations_path / f"{n}_{population_size}_{num_runs}.npy"
+        )
         # Initialize immediately
         self.initialize()
 
@@ -18,7 +24,7 @@ class PopulationGenerator:
         if self.populations_path.exists():
             self.populations = np.load(self.populations_path)
             return
-                
+
         if self.populations is not None:
             raise ValueError("Population already initialized")
 

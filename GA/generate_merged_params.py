@@ -1,6 +1,7 @@
-from GA.generate_steady_params import FINAL_PARAMS as STEADY_PARAMS
-from GA.generate_generational_params import FINAL_PARAMS as GENERATIONAL_PARAMS
+import json
 
+from GA.generate_generational_params import FINAL_PARAMS as GENERATIONAL_PARAMS
+from GA.generate_steady_params import FINAL_PARAMS as STEADY_PARAMS
 
 MERGED_PARAMS = {
     "v1": STEADY_PARAMS["v1"] + GENERATIONAL_PARAMS["v1"],
@@ -19,10 +20,18 @@ for k, v in MERGED_PARAMS.items():
             x["selection_type"]["name"],
             x["selection_type"]["parent_selection_type"]["name"],
             x["selection_type"]["parent_selection_type"].get("param", 0),
-            x["selection_type"].get("next_generation_selection_type", {}).get("name", ""),
-            x["selection_type"].get("next_generation_selection_type", {}).get("param", 0),
+            x["selection_type"]
+            .get("next_generation_selection_type", {})
+            .get("name", ""),
+            x["selection_type"]
+            .get("next_generation_selection_type", {})
+            .get("param", 0),
             x["crossover_type"],
             x["crossover_probability"],
             x["mutation_probability"],
         ),
     )
+
+
+with open("merged_params.json", "w") as f:
+    json.dump(MERGED_PARAMS, f)

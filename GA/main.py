@@ -1,13 +1,10 @@
-import functools
 import json
 import logging
-import multiprocessing as mp
 import os
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from pygad import GA
 from tqdm import tqdm
 
 from GA.encoding import BinaryEncoderDecoder, GrayEncoderDecoder
@@ -23,7 +20,9 @@ from GA.fitness_func import (
     Deb4Function,
     RastriginFunction,
 )
+from GA.genetic_algorithm import GeneticAlgorithm
 from GA.parent_selection import (
+    EliteSelection,
     ExponentialRankRWSSelection,
     ExponentialRankSUSSelection,
     LinearRankRWSSelection,
@@ -33,6 +32,12 @@ from GA.parent_selection import (
     TournamentWithoutReturn,
     TournamentWithPartialReturn,
     TournamentWithReturn,
+)
+from GA.steady_state_selection import (
+    RandomCommaSelection,
+    RandomPlusSelection,
+    WorstCommaSelection,
+    WorstPlusSelection,
 )
 from GA.uniform_mutation import UniformMutation
 
@@ -62,12 +67,12 @@ RESULTS_CSV_PATH = RESULTS_DIR / "csv"
 RESULTS_CSV_PATH.mkdir(exist_ok=True)
 
 # Constants
-NUM_RUNS = 100
-MAX_GENERATIONS = 1_000_000
+# NUM_RUNS = 100
+NUM_RUNS = 1
 CPU_COUNT = os.cpu_count()
 
 # Cache selection types to avoid repeated lookups
-SELECTION_TYPES = {
+PARENT_SELECTION_TYPES = {
     "rws": RWSSelection,
     "sus": SUSSelection,
     "lin_rank_rws": LinearRankRWSSelection,
@@ -77,6 +82,14 @@ SELECTION_TYPES = {
     "tour_with": TournamentWithReturn,
     "tour_without": TournamentWithoutReturn,
     "tour_with_partial": TournamentWithPartialReturn,
+    "elite": EliteSelection,
+}
+
+STEADY_STATE_SELECTION_TYPES = {
+    "worst_comma": WorstCommaSelection,
+    "rand_comma": RandomCommaSelection,
+    "worst_plus": WorstPlusSelection,
+    "rand_plus": RandomPlusSelection,
 }
 
 # Pre-calculate fitness functions for all dimensions
@@ -113,7 +126,7 @@ POPULATIONS = {
                 * dimension,
                 population_size=population_size,
                 num_runs=NUM_RUNS,
-                populations_path=POPULATIONS_DIR
+                populations_path=POPULATIONS_DIR,
             )
             for population_size in POPULATION_SIZES
         }
@@ -123,17 +136,29 @@ POPULATIONS = {
 }
 
 
-@functools.lru_cache(maxsize=128)
-def get_selector(selector_name, selector_param):
-    """Cache selector instances for reuse"""
-    selector_type = SELECTION_TYPES[selector_name]
+def get_parent_selector(parent_selection_params):
+    selector_param = parent_selection_params.get("param", None)
+    selector_type = PARENT_SELECTION_TYPES[parent_selection_params["name"]]
     if selector_param is not None:
         return selector_type(selector_param)
     return selector_type()
 
 
+def get_steady_state_selector(next_population_selection_params):
+    if next_population_selection_params is None:
+        return False, None
+    selector_param = next_population_selection_params.get("param", None)
+    selector_type = STEADY_STATE_SELECTION_TYPES[
+        next_population_selection_params["name"]
+    ]
+    if selector_param is not None:
+        return True, selector_type(selector_param)
+    return True, selector_type()
+
+
 def main(params: dict[str, Any]):
     # Extract parameters once
+    max_generations = params["max_generations"]
     fitness_function_name = params["fitness_function"]
     dimension = params["dimension"]
     encoding_type = params["encoding_type"]
@@ -141,8 +166,10 @@ def main(params: dict[str, Any]):
     mutation_probability = params["mutation_probability"]
     crossover_type = params["crossover_type"]
     crossover_probability = params["crossover_probability"]
-    selector_name = params["parent_selection_type"]["name"]
-    selector_param = params["parent_selection_type"]["param"]
+    parent_selection_params = params["selection_type"]["parent_selection_type"]
+    next_population_selection_params = params["selection_type"].get(
+        "next_generation_selection_type", None
+    )
 
     # Get pre-computed objects
     populations = POPULATIONS[fitness_function_name][dimension][population_size]
@@ -154,20 +181,24 @@ def main(params: dict[str, Any]):
 
     # Initialize operators
     mutator = UniformMutation(mutation_probability=mutation_probability)
-    selector = get_selector(selector_name, selector_param)
+    parent_selector = get_parent_selector(parent_selection_params)
+    with_steady_state, steady_state_selector = get_steady_state_selector(
+        next_population_selection_params
+    )
 
     # Pre-allocate metrics list with expected size
     metrics = []
     for i in range(NUM_RUNS):
         # Initialize per-run objects
         history_data = HistoryData(log_step=100)
-        stop_criteria = StopCriteria(history_data, max_generations=MAX_GENERATIONS)
+        stop_criteria = StopCriteria(history_data, max_generations=max_generations)
 
-        ga_instance = GA(
+        ga_instance = GeneticAlgorithm(
             # Basic parameters
             logger=logger,
             parallel_processing=["thread", CPU_COUNT],
-            num_generations=10_000_000,
+            num_generations=1,
+            # num_generations=10_000_000,
             keep_parents=0,
             keep_elitism=0,
             save_best_solutions=True,
@@ -177,8 +208,12 @@ def main(params: dict[str, Any]):
             gene_space=[0, 1],
             initial_population=populations[i],
             # Parent selection parameters
-            parent_selection_type=selector.select,
+            parent_selection_type=parent_selector.select,
             num_parents_mating=population_size,
+            with_steady_state=with_steady_state,
+            steady_state_selection_type=steady_state_selector.select
+            if with_steady_state
+            else None,
             # Crossover parameters
             crossover_type=crossover_type,
             crossover_probability=crossover_probability,
@@ -245,7 +280,17 @@ def main(params: dict[str, Any]):
                 params["fitness_function"],
                 str(params["dimension"]),
                 params["encoding_type"],
-                params["parent_selection_type"]["name"],
+                params["selection_type"]["name"],
+                params["selection_type"]["parent_selection_type"]["name"],
+                str(params["selection_type"]["parent_selection_type"]["param"]),
+                params["selection_type"]
+                .get("next_generation_selection_type", {})
+                .get("name", "None"),
+                str(
+                    params["selection_type"]
+                    .get("next_generation_selection_type", {})
+                    .get("param", "None")
+                ),
                 params["crossover_type"],
                 str(params["crossover_probability"]),
                 str(params["mutation_probability"]),
@@ -305,12 +350,15 @@ def calculate_statistics(metrics: list[dict[str, Any]], key: str) -> dict[str, A
 
 if __name__ == "__main__":
     # Load parameters once
-    with open("simple_params.json") as f:
+    params_type = input("Enter the params type (generational/steady/merged): ")
+    with open(f"{params_type}_params.json") as f:
         parameters_simple = json.load(f)
 
-    params_key = input("Enter the key: ")
+    params_key = input("Enter the option number (v1/v2): ")
     params = parameters_simple[params_key]
 
     # Run all parameter combinations in parallel using a process pool
-    with mp.Pool(processes=CPU_COUNT) as pool:
-        r = list(tqdm(pool.imap(main, params), total=len(params)))
+    for param in tqdm(params):
+        main(param)
+    # with mp.Pool(processes=CPU_COUNT) as pool:
+    #     r = list(tqdm(pool.imap(main, params), total=len(params)))
