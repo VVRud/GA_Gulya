@@ -159,6 +159,8 @@ def get_steady_state_selector(next_population_selection_params):
 def main(params: dict[str, Any]):
     # Extract parameters once
     max_generations = params["max_generations"]
+    history_check_generations = params["history_check_generations"]
+    parents_mating = params["parents_mating"]
     fitness_function_name = params["fitness_function"]
     dimension = params["dimension"]
     encoding_type = params["encoding_type"]
@@ -191,7 +193,7 @@ def main(params: dict[str, Any]):
     for i in range(NUM_RUNS):
         # Initialize per-run objects
         history_data = HistoryData(log_step=100)
-        stop_criteria = StopCriteria(history_data, max_generations=max_generations)
+        stop_criteria = StopCriteria(history_data, max_generations=max_generations, fitness_change_history_length=history_check_generations)
 
         ga_instance = GeneticAlgorithm(
             # Basic parameters
@@ -208,7 +210,7 @@ def main(params: dict[str, Any]):
             initial_population=populations[i],
             # Parent selection parameters
             parent_selection_type=parent_selector.select,
-            num_parents_mating=population_size,
+            num_parents_mating=parents_mating,
             with_steady_state=with_steady_state,
             steady_state_selection_type=(
                 steady_state_selector.select if with_steady_state else None

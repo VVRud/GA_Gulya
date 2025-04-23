@@ -30,20 +30,10 @@ class RandomCommaSelection(BaseSelection):
         Returns:
             The next population.
         """
-        if offsprings.size == 0:
+        if ga_instance.num_offspring == 0:
             return population
 
-        num_parents_select = ga_instance.sol_per_pop - offsprings.shape[0]
-        next_population = np.empty_like(population)
+        np.random.shuffle(population)
+        population[:ga_instance.num_offspring] = offsprings
 
-        # Randomly select individuals from the population
-        selected_parents_indices = np.random.choice(
-            np.arange(population.shape[0]),
-            size=num_parents_select,
-            replace=False,
-        )
-
-        next_population[:num_parents_select] = population[selected_parents_indices]
-        next_population[num_parents_select:] = offsprings
-
-        return next_population
+        return population

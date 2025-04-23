@@ -31,21 +31,12 @@ class WorstPlusSelection(BaseSelection):
         Returns:
             The next population.
         """
-        if offsprings.size == 0:
+        if ga_instance.num_offspring == 0:
             return population
 
-        # Create a combined pool of population and offsprings
         combined_population = np.concatenate([population, offsprings])
-
-        # Calculate fitness for the offsprings
         offsprings_fitness = ga_instance.fitness_func(
-            ga_instance, offsprings, np.arange(offsprings.shape[0])
+            ga_instance, offsprings, np.arange(ga_instance.num_offspring)
         )
-
-        # Combine fitness values
         combined_fitness = np.concatenate([population_fitness, offsprings_fitness])
-
-        # Select the best individuals based on fitness
-        selected_indices = np.argsort(combined_fitness)[::-1][: ga_instance.sol_per_pop]
-
-        return combined_population[selected_indices]
+        return combined_population[np.argsort(combined_fitness)][ga_instance.sol_per_pop:]

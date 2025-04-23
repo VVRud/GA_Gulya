@@ -30,18 +30,10 @@ class WorstCommaSelection(BaseSelection):
         Returns:
             The next population.
         """
-        if offsprings.size == 0:
+        if ga_instance.num_offspring == 0:
             return population
 
-        num_parents_select = ga_instance.sol_per_pop - offsprings.shape[0]
-        next_population = np.empty_like(population)
+        population = population[np.argsort(population_fitness)]
+        population[:ga_instance.num_offspring] = offsprings
 
-        # Sort indices by fitness in descending order and select the best individuals
-        selected_parents_indices = np.argsort(population_fitness)[::-1][
-            :num_parents_select
-        ]
-
-        next_population[:num_parents_select] = population[selected_parents_indices]
-        next_population[num_parents_select:] = offsprings
-
-        return next_population
+        return population

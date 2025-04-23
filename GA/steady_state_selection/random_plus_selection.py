@@ -31,17 +31,9 @@ class RandomPlusSelection(BaseSelection):
         Returns:
             The next population.
         """
-        if offsprings.size == 0:
+        if ga_instance.num_offspring == 0:
             return population
 
-        # Create a combined pool of population and offsprings
         combined_population = np.concatenate([population, offsprings])
-
-        # Randomly select individuals from the combined pool
-        selected_indices = np.random.choice(
-            np.arange(combined_population.shape[0]),
-            size=ga_instance.sol_per_pop,
-            replace=False,
-        )
-
-        return combined_population[selected_indices]
+        np.random.shuffle(combined_population)
+        return combined_population[:ga_instance.sol_per_pop]
