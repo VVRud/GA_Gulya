@@ -2,7 +2,7 @@ from abc import ABC
 
 import numpy as np
 
-from GA.selection.base_with_probabilities import BaseWithProbabilities
+from GA.parent_selection.base_with_probabilities import BaseWithProbabilities
 
 
 class BaseExpRank(BaseWithProbabilities, ABC):

@@ -1,7 +1,7 @@
 import numpy as np
 import pygad
 
-from GA.selection.base_with_probabilities import BaseWithProbabilities
+from GA.parent_selection.base_with_probabilities import BaseWithProbabilities
 
 
 class SUSSelection(BaseWithProbabilities):

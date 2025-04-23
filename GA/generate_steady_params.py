@@ -2,6 +2,8 @@ import itertools
 import json
 
 # Common parameters
+MAX_GENERATIONS = 1_000_000
+HISTORY_CHECK_GENERATIONS = 10
 DIMENSIONS = [1, 2, 3, 5]
 
 ENCODING_TYPES = ["binary", "gray"]
@@ -40,6 +42,17 @@ NEXT_GENERATION_SELECTION_TYPES = [
     "rand_plus",
 ]
 
+SELECTION_TYPES = [
+    {
+        "name": "steady",
+        "parent_selection_type": {"name": parent_selection_type, "param": None},
+        "next_generation_selection_type": {"name": next_generation_selection_type, "param": None},
+    }
+    for parent_selection_type, next_generation_selection_type in itertools.product(
+        PARENT_SELECTION_TYPES, NEXT_GENERATION_SELECTION_TYPES
+    )
+]
+
 BASE_PARAMS = []
 for (
     dimension,
@@ -47,8 +60,7 @@ for (
     crossover_type,
     crossover_probability,
     generation_gap,
-    parent_selection_type,
-    next_generation_selection_type,
+    selection_type,
     population,
 ) in itertools.product(
     DIMENSIONS,
@@ -56,19 +68,19 @@ for (
     CROSSOVER_TYPES,
     CROSSOVER_PROBABILITIES,
     GENERATION_GAP,
-    PARENT_SELECTION_TYPES,
-    NEXT_GENERATION_SELECTION_TYPES,
+    SELECTION_TYPES,
     POPULATION_SIZES,
 ):
     for mutation_probability in MUTATION_PROBABILITIES[population]:
         BASE_PARAMS.append(
             {
+                "max_generations": int(MAX_GENERATIONS * generation_gap),
+                "parents_mating": int(population * generation_gap),
+                "history_check_generations": int(HISTORY_CHECK_GENERATIONS * population / generation_gap),
                 "population": population,
                 "dimension": dimension,
                 "encoding_type": encoding_type,
-                "generation_gap": generation_gap,
-                "parent_selection_type": parent_selection_type,
-                "next_generation_selection_type": next_generation_selection_type,
+                "selection_type": selection_type,
                 "crossover_type": crossover_type,
                 "crossover_probability": crossover_probability,
                 "mutation_probability": mutation_probability,
@@ -90,38 +102,22 @@ FINAL_PARAMS = {
 
 for k, v in FINAL_PARAMS.items():
     print(k, len(v))
+    FINAL_PARAMS[k] = sorted(
+        v,
+        key=lambda x: (
+            x["population"],
+            x["dimension"],
+            x["fitness_function"],
+            x["encoding_type"],
+            x["selection_type"]["parent_selection_type"]["name"],
+            x["selection_type"]["parent_selection_type"].get("param", 0),
+            x["selection_type"]["next_generation_selection_type"]["name"],
+            x["selection_type"]["next_generation_selection_type"].get("param", 0),
+            x["crossover_type"],
+            x["crossover_probability"],
+            x["mutation_probability"],
+        ),
+    )
 
-FINAL_PARAMS["v1"] = sorted(
-    FINAL_PARAMS["v1"],
-    key=lambda x: (
-        x["population"],
-        x["dimension"],
-        x["fitness_function"],
-        x["encoding_type"],
-        x["generation_gap"],
-        x["parent_selection_type"],
-        x["next_generation_selection_type"],
-        x["crossover_type"],
-        x["crossover_probability"],
-        x["mutation_probability"],
-    ),
-)
-
-FINAL_PARAMS["v2"] = sorted(
-    FINAL_PARAMS["v2"],
-    key=lambda x: (
-        x["population"],
-        x["dimension"],
-        x["fitness_function"],
-        x["encoding_type"],
-        x["generation_gap"],
-        x["parent_selection_type"],
-        x["next_generation_selection_type"],
-        x["crossover_type"],
-        x["crossover_probability"],
-        x["mutation_probability"],
-    ),
-)
-
-with open("gg_params.json", "w") as f:
+with open("steady_params.json", "w") as f:
     json.dump(FINAL_PARAMS, f, indent=4)

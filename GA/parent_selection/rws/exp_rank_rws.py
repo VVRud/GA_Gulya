@@ -1,4 +1,4 @@
-from GA.selection.base_exp_rank import BaseExpRank
+from GA.parent_selection.base_exp_rank import BaseExpRank
 
 from .rws import RWSSelection
 

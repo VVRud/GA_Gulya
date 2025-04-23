@@ -23,7 +23,7 @@ from GA.fitness_func import (
     Deb4Function,
     RastriginFunction,
 )
-from GA.selection import (
+from GA.parent_selection import (
     ExponentialRankRWSSelection,
     ExponentialRankSUSSelection,
     LinearRankRWSSelection,

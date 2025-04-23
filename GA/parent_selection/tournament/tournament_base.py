@@ -1,7 +1,7 @@
 import numpy as np
 import pygad
 
-from GA.selection.base_selection import BaseSelection
+from GA.parent_selection.base_selection import BaseSelection
 
 
 class TournamentBase(BaseSelection):

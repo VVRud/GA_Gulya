@@ -1,4 +1,4 @@
-from GA.selection.base_lin_rank import BaseLinRank
+from GA.parent_selection.base_lin_rank import BaseLinRank
 
 from .sus import SUSSelection
 

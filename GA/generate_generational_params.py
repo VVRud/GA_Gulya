@@ -3,6 +3,8 @@ import json
 from collections import defaultdict
 
 # Common Parameters
+MAX_GENERATIONS = 1_000_000
+HISTORY_CHECK_GENERATIONS = 10
 DIMENSIONS = [1, 2, 3, 5]
 
 ENCODING_TYPES = ["binary", "gray"]
@@ -31,13 +33,13 @@ MUTATION_PROBABILITIES = {
 POPULATION_SIZES = [100, 200, 300, 400]
 
 BASE_PARENT_SELECTION_TYPES = [
-    {"name": "sus", "param": None},
-    {"name": "rws", "param": None},
-    {"name": "tour_with", "param": 2},
-    {"name": "tour_without", "param": 2},
-    {"name": "tour_with_partial", "param": 2},
-    {"name": "tour_with", "param": 4},
-    {"name": "tour_without", "param": 4},
+    {"name": "simple", "parent_selection_type": {"name": "sus", "param": None}},
+    {"name": "rws", "parent_selection_type": {"name": "rws", "param": None}},
+    {"name": "tour_with", "parent_selection_type": {"name": "tour_with", "param": 2}},
+    {"name": "tour_without", "parent_selection_type": {"name": "tour_without", "param": 2}},
+    {"name": "tour_with_partial", "parent_selection_type": {"name": "tour_with_partial", "param": 2}},
+    {"name": "tour_with", "parent_selection_type": {"name": "tour_with", "param": 4}},
+    {"name": "tour_without", "parent_selection_type": {"name": "tour_without", "param": 4}},
 ]
 
 BASE_TYPES = ["rws", "sus"]
@@ -52,20 +54,20 @@ EXP_RANK_EXPONENTS = {
 LIN_RANK_EXPONENTS = [2, 1.6]
 
 
-PARENT_SELECTION_TYPES = defaultdict(list)
+SELECTION_TYPES = defaultdict(list)
 for population in POPULATION_SIZES:
-    PARENT_SELECTION_TYPES[population].extend(BASE_PARENT_SELECTION_TYPES)
+    SELECTION_TYPES[population].extend(BASE_PARENT_SELECTION_TYPES)
     for rank_type in RANK_TYPES:
         for base_type in BASE_TYPES:
             if rank_type == "exp":
                 for exponent in EXP_RANK_EXPONENTS[population]:
-                    PARENT_SELECTION_TYPES[population].append(
-                        {"name": f"{rank_type}_rank_{base_type}", "param": exponent}
+                    SELECTION_TYPES[population].append(
+                        {"name": "simple", "parent_selection_type": {"name": f"{rank_type}_rank_{base_type}", "param": exponent}}
                     )
             elif rank_type == "lin":
                 for exponent in LIN_RANK_EXPONENTS:
-                    PARENT_SELECTION_TYPES[population].append(
-                        {"name": f"{rank_type}_rank_{base_type}", "param": exponent}
+                    SELECTION_TYPES[population].append(
+                        {"name": "simple", "parent_selection_type": {"name": f"{rank_type}_rank_{base_type}", "param": exponent}}
                     )
 
 BASE_PARAMS = []
@@ -82,15 +84,18 @@ for (
     CROSSOVER_PROBABILITIES,
     POPULATION_SIZES,
 ):
-    for mutation_probability, parent_selection_type in itertools.product(
-        MUTATION_PROBABILITIES[population], PARENT_SELECTION_TYPES[population]
+    for mutation_probability, selection_type in itertools.product(
+        MUTATION_PROBABILITIES[population], SELECTION_TYPES[population]
     ):
         BASE_PARAMS.append(
             {
+                "max_generations": MAX_GENERATIONS,
+                "parents_mating": population,
+                "history_check_generations": HISTORY_CHECK_GENERATIONS,
                 "population": population,
                 "dimension": dimension,
                 "encoding_type": encoding_type,
-                "parent_selection_type": parent_selection_type,
+                "selection_type": selection_type,
                 "crossover_type": crossover_type,
                 "crossover_probability": crossover_probability,
                 "mutation_probability": mutation_probability,
@@ -112,34 +117,20 @@ FINAL_PARAMS = {
 
 for k, v in FINAL_PARAMS.items():
     print(k, len(v))
+    FINAL_PARAMS[k] = sorted(
+        v,
+        key=lambda x: (
+            x["population"],
+            x["dimension"],
+            x["fitness_function"],
+            x["encoding_type"],
+            x["selection_type"]["parent_selection_type"]["name"],
+            x["selection_type"]["parent_selection_type"].get("param", 0),
+            x["crossover_type"],
+            x["crossover_probability"],
+            x["mutation_probability"],
+        ),
+    )
 
-FINAL_PARAMS["v1"] = sorted(
-    FINAL_PARAMS["v1"],
-    key=lambda x: (
-        x["dimension"],
-        x["population"],
-        x["fitness_function"],
-        x["encoding_type"],
-        x["parent_selection_type"]["name"],
-        x["crossover_type"],
-        x["crossover_probability"],
-        x["mutation_probability"],
-    ),
-)
-
-FINAL_PARAMS["v2"] = sorted(
-    FINAL_PARAMS["v2"],
-    key=lambda x: (
-        x["dimension"],
-        x["population"],
-        x["fitness_function"],
-        x["encoding_type"],
-        x["parent_selection_type"]["name"],
-        x["crossover_type"],
-        x["crossover_probability"],
-        x["mutation_probability"],
-    ),
-)
-
-with open("simple_params.json", "w") as f:
+with open("generational_params.json", "w") as f:
     json.dump(FINAL_PARAMS, f, indent=4)
