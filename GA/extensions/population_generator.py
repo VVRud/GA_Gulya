@@ -2,11 +2,12 @@ import numpy as np
 
 
 class PopulationGenerator:
-    def __init__(self, n: int, population_size: int, num_runs: int):
+    def __init__(self, n: int, population_size: int, num_runs: int, populations_path: Path):
         self.n = n
         self.population_size = population_size
         self.num_runs = num_runs
         self.populations = None
+        self.populations_path = populations_path
         # Initialize immediately
         self.initialize()
 
@@ -14,6 +15,10 @@ class PopulationGenerator:
         """
         Initialize populations using optimized random generation.
         """
+        if self.populations_path.exists():
+            self.populations = np.load(self.populations_path)
+            return
+                
         if self.populations is not None:
             raise ValueError("Population already initialized")
 
@@ -26,6 +31,8 @@ class PopulationGenerator:
             size=(self.num_runs, self.population_size, self.n),
             dtype=np.int8,  # Use smallest integer type to save memory
         )
+
+        np.save(self.populations_path, self.populations)
 
     def __getitem__(self, run_number: int) -> np.ndarray:
         """

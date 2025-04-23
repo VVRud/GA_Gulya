@@ -48,6 +48,9 @@ formatter = logging.Formatter(
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+POPULATIONS_DIR = Path("populations")
+POPULATIONS_DIR.mkdir(exist_ok=True)
+
 # Pre-create directories
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -110,6 +113,7 @@ POPULATIONS = {
                 * dimension,
                 population_size=population_size,
                 num_runs=NUM_RUNS,
+                populations_path=POPULATIONS_DIR
             )
             for population_size in POPULATION_SIZES
         }
@@ -154,8 +158,6 @@ def main(params: dict[str, Any]):
 
     # Pre-allocate metrics list with expected size
     metrics = []
-    metrics_append = metrics.append  # Local reference for faster appends
-
     for i in range(NUM_RUNS):
         # Initialize per-run objects
         history_data = HistoryData(log_step=100)
@@ -208,7 +210,7 @@ def main(params: dict[str, Any]):
         )
 
         # Use float() for NumPy values to avoid serialization issues
-        metrics_append(
+        metrics.append(
             {
                 "Run": i + 1,
                 "IsSuc": bool(is_successful),
