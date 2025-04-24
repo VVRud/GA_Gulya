@@ -1,7 +1,10 @@
-tqdm
 pygad
 numpy
+
+tqdm
+
 pandas
+xlsxwriter
 
 ruff
 pytest

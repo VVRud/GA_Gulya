@@ -38,19 +38,19 @@ POPULATION_SIZES = [100, 200, 300, 400]
 
 BASE_PARENT_SELECTION_TYPES = [
     {"name": "simple", "parent_selection_type": {"name": "sus", "param": None}},
-    {"name": "rws", "parent_selection_type": {"name": "rws", "param": None}},
-    {"name": "tour_with", "parent_selection_type": {"name": "tour_with", "param": 2}},
+    {"name": "simple", "parent_selection_type": {"name": "rws", "param": None}},
+    {"name": "simple", "parent_selection_type": {"name": "tour_with", "param": 2}},
     {
-        "name": "tour_without",
+        "name": "simple",
         "parent_selection_type": {"name": "tour_without", "param": 2},
     },
     {
-        "name": "tour_with_partial",
+        "name": "simple",
         "parent_selection_type": {"name": "tour_with_partial", "param": 2},
     },
-    {"name": "tour_with", "parent_selection_type": {"name": "tour_with", "param": 4}},
+    {"name": "simple", "parent_selection_type": {"name": "tour_with", "param": 4}},
     {
-        "name": "tour_without",
+        "name": "simple",
         "parent_selection_type": {"name": "tour_without", "param": 4},
     },
 ]

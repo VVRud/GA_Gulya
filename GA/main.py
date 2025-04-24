@@ -68,9 +68,6 @@ RESULTS_DIR.mkdir(exist_ok=True)
 RESULTS_JSON_PATH = RESULTS_DIR / "json"
 RESULTS_JSON_PATH.mkdir(exist_ok=True)
 
-RESULTS_CSV_PATH = RESULTS_DIR / "csv"
-RESULTS_CSV_PATH.mkdir(exist_ok=True)
-
 # Constants
 NUM_RUNS = 100
 CPU_COUNT = os.cpu_count()
