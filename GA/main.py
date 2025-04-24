@@ -145,7 +145,7 @@ def get_parent_selector(parent_selection_params):
 
 
 def get_steady_state_selector(next_population_selection_params):
-    if next_population_selection_params is None:
+    if next_population_selection_params is None or next_population_selection_params == {}:
         return False, None
     selector_param = next_population_selection_params.get("param", None)
     selector_type = STEADY_STATE_SELECTION_TYPES[
@@ -170,8 +170,30 @@ def main(params: dict[str, Any]):
     crossover_probability = params["crossover_probability"]
     parent_selection_params = params["selection_type"]["parent_selection_type"]
     next_population_selection_params = params["selection_type"].get(
-        "next_generation_selection_type", None
+        "next_generation_selection_type", {}
     )
+    
+    results_file = RESULTS_JSON_PATH / (
+        "__".join(
+            [
+                str(population_size),
+                fitness_function_name,
+                str(dimension),
+                encoding_type,
+                parent_selection_params["name"],
+                str(parent_selection_params["param"]),
+                next_population_selection_params.get("name", "None"),
+                str(next_population_selection_params.get("param", "None")),
+                crossover_type,
+                str(crossover_probability),
+                str(mutation_probability),
+            ]
+        )
+        + ".json"
+    )
+    if results_file.exists():
+        with results_file.open("r") as f:
+            return json.load(f)
 
     # Get pre-computed objects
     populations = POPULATIONS[fitness_function_name][dimension][population_size]
@@ -273,35 +295,8 @@ def main(params: dict[str, Any]):
         "summary": summary,
     }
 
-    # Create filename once
-    filename = (
-        "__".join(
-            [
-                str(params["population"]),
-                params["fitness_function"],
-                str(params["dimension"]),
-                params["encoding_type"],
-                params["selection_type"]["name"],
-                params["selection_type"]["parent_selection_type"]["name"],
-                str(params["selection_type"]["parent_selection_type"]["param"]),
-                params["selection_type"]
-                .get("next_generation_selection_type", {})
-                .get("name", "None"),
-                str(
-                    params["selection_type"]
-                    .get("next_generation_selection_type", {})
-                    .get("param", "None")
-                ),
-                params["crossover_type"],
-                str(params["crossover_probability"]),
-                str(params["mutation_probability"]),
-            ]
-        )
-        + ".json"
-    )
-
     # Write results in a single operation
-    with open(RESULTS_JSON_PATH / filename, "w") as f:
+    with results_file.open("w") as f:
         json.dump(final_metrics, f, indent=4)
 
     return final_metrics
