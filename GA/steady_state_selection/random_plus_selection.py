@@ -36,4 +36,4 @@ class RandomPlusSelection(BaseSelection):
 
         combined_population = np.concatenate([population, offsprings])
         np.random.shuffle(combined_population)
-        return combined_population[:ga_instance.sol_per_pop]
+        return combined_population[: ga_instance.sol_per_pop]

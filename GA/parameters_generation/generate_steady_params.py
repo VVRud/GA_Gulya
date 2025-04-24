@@ -1,5 +1,9 @@
 import itertools
 import json
+from pathlib import Path
+
+PARAMETERS_PATH = Path.cwd() / "parameters"
+PARAMETERS_PATH.mkdir(exist_ok=True)
 
 # Common parameters
 MAX_GENERATIONS = 1_000_000
@@ -124,5 +128,5 @@ for k, v in FINAL_PARAMS.items():
         ),
     )
 
-with open("steady_params.json", "w") as f:
+with open(PARAMETERS_PATH / "steady_params.json", "w") as f:
     json.dump(FINAL_PARAMS, f, indent=4)

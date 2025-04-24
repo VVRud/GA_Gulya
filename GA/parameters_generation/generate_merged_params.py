@@ -1,7 +1,11 @@
 import json
+from pathlib import Path
 
 from GA.generate_generational_params import FINAL_PARAMS as GENERATIONAL_PARAMS
 from GA.generate_steady_params import FINAL_PARAMS as STEADY_PARAMS
+
+PARAMETERS_PATH = Path.cwd() / "parameters"
+PARAMETERS_PATH.mkdir(exist_ok=True)
 
 MERGED_PARAMS = {
     "v1": STEADY_PARAMS["v1"] + GENERATIONAL_PARAMS["v1"],
@@ -33,5 +37,5 @@ for k, v in MERGED_PARAMS.items():
     )
 
 
-with open("merged_params.json", "w") as f:
+with open(PARAMETERS_PATH / "merged_params.json", "w") as f:
     json.dump(MERGED_PARAMS, f)

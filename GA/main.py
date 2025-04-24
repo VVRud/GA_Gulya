@@ -22,6 +22,7 @@ from GA.fitness_func import (
     RastriginFunction,
 )
 from GA.genetic_algorithm import GeneticAlgorithm
+from GA.mutation.uniform_mutation import UniformMutation
 from GA.parent_selection import (
     EliteSelection,
     ExponentialRankRWSSelection,
@@ -40,7 +41,6 @@ from GA.steady_state_selection import (
     WorstCommaSelection,
     WorstPlusSelection,
 )
-from GA.uniform_mutation import UniformMutation
 
 # Optimize logging - set it up once at startup and disable debug-level logging
 level = logging.ERROR
@@ -54,11 +54,15 @@ formatter = logging.Formatter(
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-POPULATIONS_DIR = Path("populations")
+CWD = Path.cwd()
+
+PARAMETERS_PATH = CWD / "parameters"
+
+POPULATIONS_DIR = CWD / "populations"
 POPULATIONS_DIR.mkdir(exist_ok=True)
 
 # Pre-create directories
-RESULTS_DIR = Path("results")
+RESULTS_DIR = CWD / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
 RESULTS_JSON_PATH = RESULTS_DIR / "json"
@@ -145,7 +149,10 @@ def get_parent_selector(parent_selection_params):
 
 
 def get_steady_state_selector(next_population_selection_params):
-    if next_population_selection_params is None or next_population_selection_params == {}:
+    if (
+        next_population_selection_params is None
+        or next_population_selection_params == {}
+    ):
         return False, None
     selector_param = next_population_selection_params.get("param", None)
     selector_type = STEADY_STATE_SELECTION_TYPES[
@@ -172,7 +179,7 @@ def main(params: dict[str, Any]):
     next_population_selection_params = params["selection_type"].get(
         "next_generation_selection_type", {}
     )
-    
+
     results_file = RESULTS_JSON_PATH / (
         "__".join(
             [
@@ -215,7 +222,11 @@ def main(params: dict[str, Any]):
     for i in range(NUM_RUNS):
         # Initialize per-run objects
         history_data = HistoryData(log_step=100)
-        stop_criteria = StopCriteria(history_data, max_generations=max_generations, fitness_change_history_length=history_check_generations)
+        stop_criteria = StopCriteria(
+            history_data,
+            max_generations=max_generations,
+            fitness_change_history_length=history_check_generations,
+        )
 
         ga_instance = GeneticAlgorithm(
             # Basic parameters
@@ -347,7 +358,13 @@ def calculate_statistics(metrics: list[dict[str, Any]], key: str) -> dict[str, A
 if __name__ == "__main__":
     # Load parameters once
     params_type = input("Enter the params type (generational/steady/merged): ")
-    with open(f"{params_type}_params.json") as f:
+    parameters_file = PARAMETERS_PATH / f"{params_type}_params.json"
+    if not parameters_file.exists():
+        raise FileNotFoundError(
+            f"Parameters file {parameters_file} not found. "
+            "Please generate one or fix the path."
+        )
+    with open(parameters_file) as f:
         parameters_simple = json.load(f)
 
     params_key = input("Enter the option number (v1/v2): ")

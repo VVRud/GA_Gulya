@@ -34,6 +34,6 @@ class WorstCommaSelection(BaseSelection):
             return population
 
         population = population[np.argsort(population_fitness)]
-        population[:ga_instance.num_offspring] = offsprings
+        population[: ga_instance.num_offspring] = offsprings
 
         return population

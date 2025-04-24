@@ -34,6 +34,6 @@ class RandomCommaSelection(BaseSelection):
             return population
 
         np.random.shuffle(population)
-        population[:ga_instance.num_offspring] = offsprings
+        population[: ga_instance.num_offspring] = offsprings
 
         return population
