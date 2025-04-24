@@ -39,4 +39,4 @@ class WorstPlusSelection(BaseSelection):
             ga_instance, offsprings, np.arange(ga_instance.num_offspring)
         )
         combined_fitness = np.concatenate([population_fitness, offsprings_fitness])
-        return combined_population[np.argsort(combined_fitness)][ga_instance.sol_per_pop:]
+        return combined_population[np.argsort(combined_fitness)][-ga_instance.sol_per_pop:]

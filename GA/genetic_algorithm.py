@@ -28,3 +28,8 @@ class GeneticAlgorithm(pygad.GA):
             self.last_generation_offspring_mutation,
             self,
         )
+
+        assert self.population.shape == (
+            self.sol_per_pop,
+            self.num_genes,
+        ), f"Population shape is {self.population.shape}, expected {self.sol_per_pop, self.num_genes}"
