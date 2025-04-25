@@ -19,6 +19,7 @@ XLSX_DOCS.mkdir(exist_ok=True)
 PARAM_NAMES = {
     "fitness_function": "Fitness Function",
     "encoding_type": "Encoding Type",
+    "parents_mating": "Parents Mating",
     "parent_selection_type_name": "Parent Selection Type",
     "parent_selection_type_param": "Parent Selection Type Param",
     "next_generation_selection_type_name": "Next Generation Selection Type",
