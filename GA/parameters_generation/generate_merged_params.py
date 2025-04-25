@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 from pathlib import Path
 
 from GA.parameters_generation.generate_generational_params import (
@@ -17,7 +18,7 @@ MERGED_PARAMS = {
 }
 
 for k, v in MERGED_PARAMS.items():
-    print(k, len(v))
+    print(f"Total counts for {k}: {len(v)}")
     MERGED_PARAMS[k] = sorted(
         v,
         key=lambda x: (
@@ -39,6 +40,19 @@ for k, v in MERGED_PARAMS.items():
             x["mutation_probability"],
         ),
     )
+    counter = Counter()
+    for param in v:
+        counter[
+            "_".join(
+                [
+                    param["fitness_function"],
+                    str(param["dimension"]),
+                    str(param["population"]),
+                ]
+            )
+        ] += 1
+    for k, v in sorted(counter.items(), key=lambda x: (x[0], x[1]), reverse=False):
+        print(f"\t{k}: {v}")
 
 
 with open(PARAMETERS_PATH / "merged_params.json", "w") as f:
