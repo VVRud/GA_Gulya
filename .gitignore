@@ -177,3 +177,5 @@ cython_debug/
 parameters/
 populations/
 results/
+
+genetic.pkl
