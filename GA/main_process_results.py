@@ -78,10 +78,10 @@ def read_json_files() -> dict[str, dict[str, list[dict]]]:
                 ]
             )
             subkey = (
-                "generational"
+                "steady_state"
                 if result["params"].get("next_generation_selection_type_name", None)
                 is not None
-                else "steady_state"
+                else "generational"
             )
             data[key][subkey].append(result)
     return data
