@@ -7,3 +7,7 @@ To run this:
 3. Generate parameters: `python GA/parameters_generation/generate_merged_params.py`
 4. Start the algorithm: `python GA/main.py`
 5. Generate final excel file: `python GA/main_process_results.py`
+
+To change parameters:
+1. Open `GA/parameters_generation/generate_{generational/steady}_parameters.py`
+2. Change whatever you need there.
