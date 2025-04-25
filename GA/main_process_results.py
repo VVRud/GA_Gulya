@@ -146,6 +146,7 @@ def process_data(data: dict[str, dict[str, list[dict]]]) -> None:
                 runs_df = runs_df.reindex(
                     columns=list(PARAM_NAMES.keys()) + list(RUN_NAMES.keys())
                 )
+                runs_df = runs_df.rename(columns=PARAM_NAMES)
                 runs_df = runs_df.rename(columns=RUN_NAMES)
 
                 summary_data = [
@@ -159,10 +160,14 @@ def process_data(data: dict[str, dict[str, list[dict]]]) -> None:
                 stats_df.append(summary_df)
 
                 write_excel_file(writer, runs_df, reproduction_type)
-                write_excel_file(writer, summary_df, f"{reproduction_type}_SUMMARY")
+                write_excel_file(
+                    writer,
+                    summary_df,
+                    f"{reproduction_type}_SUMMARY".upper(),
+                )
 
             stats_df = pd.concat(stats_df)
-            write_excel_file(writer, stats_df, "FINAL_SUMMARY")
+            write_excel_file(writer, stats_df, "FINAL_SUMMARY".upper())
 
 
 def write_excel_file(writer: pd.ExcelWriter, df: pd.DataFrame, sheet_name: str) -> None:
