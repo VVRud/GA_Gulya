@@ -7,7 +7,8 @@ PARAMETERS_PATH = Path.cwd() / "parameters"
 PARAMETERS_PATH.mkdir(exist_ok=True)
 
 # Common Parameters
-MAX_GENERATIONS = 1_000_000
+NUM_RUNS = 10
+MAX_GENERATIONS = 100_000
 HISTORY_CHECK_GENERATIONS = 10
 DIMENSIONS = [1, 2, 3, 5]
 
@@ -33,24 +34,30 @@ MUTATION_PROBABILITIES = {
     400: [0, 0.0002, 0.0005, 0.002, 0.01, 0.1],
 }
 
-# Simple parameters
+# generational parameters
 POPULATION_SIZES = [100, 200, 300, 400]
 
 BASE_PARENT_SELECTION_TYPES = [
-    {"name": "simple", "parent_selection_type": {"name": "sus", "param": None}},
-    {"name": "simple", "parent_selection_type": {"name": "rws", "param": None}},
-    {"name": "simple", "parent_selection_type": {"name": "tour_with", "param": 2}},
+    {"name": "generational", "parent_selection_type": {"name": "sus", "param": None}},
+    {"name": "generational", "parent_selection_type": {"name": "rws", "param": None}},
     {
-        "name": "simple",
+        "name": "generational",
+        "parent_selection_type": {"name": "tour_with", "param": 2},
+    },
+    {
+        "name": "generational",
         "parent_selection_type": {"name": "tour_without", "param": 2},
     },
     {
-        "name": "simple",
+        "name": "generational",
         "parent_selection_type": {"name": "tour_with_partial", "param": 2},
     },
-    {"name": "simple", "parent_selection_type": {"name": "tour_with", "param": 4}},
     {
-        "name": "simple",
+        "name": "generational",
+        "parent_selection_type": {"name": "tour_with", "param": 4},
+    },
+    {
+        "name": "generational",
         "parent_selection_type": {"name": "tour_without", "param": 4},
     },
 ]
@@ -76,7 +83,7 @@ for population in POPULATION_SIZES:
                 for exponent in EXP_RANK_EXPONENTS[population]:
                     SELECTION_TYPES[population].append(
                         {
-                            "name": "simple",
+                            "name": "generational",
                             "parent_selection_type": {
                                 "name": f"{rank_type}_rank_{base_type}",
                                 "param": exponent,
@@ -87,7 +94,7 @@ for population in POPULATION_SIZES:
                 for exponent in LIN_RANK_EXPONENTS:
                     SELECTION_TYPES[population].append(
                         {
-                            "name": "simple",
+                            "name": "generational",
                             "parent_selection_type": {
                                 "name": f"{rank_type}_rank_{base_type}",
                                 "param": exponent,
@@ -114,6 +121,7 @@ for (
     ):
         BASE_PARAMS.append(
             {
+                "num_runs": NUM_RUNS,
                 "max_generations": MAX_GENERATIONS,
                 "parents_mating": population,
                 "history_check_generations": HISTORY_CHECK_GENERATIONS,

@@ -6,7 +6,8 @@ PARAMETERS_PATH = Path.cwd() / "parameters"
 PARAMETERS_PATH.mkdir(exist_ok=True)
 
 # Common parameters
-MAX_GENERATIONS = 1_000_000
+NUM_RUNS = 10
+MAX_GENERATIONS = 100_000
 HISTORY_CHECK_GENERATIONS = 10
 DIMENSIONS = [1, 2, 3, 5]
 
@@ -81,6 +82,7 @@ for (
     for mutation_probability in MUTATION_PROBABILITIES[population]:
         BASE_PARAMS.append(
             {
+                "num_runs": NUM_RUNS,
                 "max_generations": int(MAX_GENERATIONS * generation_gap),
                 "parents_mating": int(population * generation_gap),
                 "history_check_generations": int(

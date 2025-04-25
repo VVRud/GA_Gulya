@@ -68,8 +68,12 @@ RESULTS_DIR.mkdir(exist_ok=True)
 RESULTS_JSON_PATH = RESULTS_DIR / "json"
 RESULTS_JSON_PATH.mkdir(exist_ok=True)
 
+# Set this to 1 to run the GA with a single run and generation
+OVERRIDE_NUM_RUNS = None
+OVERRIDE_NUM_GENERATIONS = None
+
 # Constants
-NUM_RUNS = 100
+MAX_NUM_RUNS = 100
 CPU_COUNT = os.cpu_count()
 
 # Cache selection types to avoid repeated lookups
@@ -126,7 +130,7 @@ POPULATIONS = {
                 n=ENCODERS_DECODERS[fitness_function_name]["binary"].num_bits
                 * dimension,
                 population_size=population_size,
-                num_runs=NUM_RUNS,
+                num_runs=MAX_NUM_RUNS,
                 populations_path=POPULATIONS_DIR,
             )
             for population_size in POPULATION_SIZES
@@ -162,20 +166,26 @@ def get_steady_state_selector(next_population_selection_params):
 
 def main(params: dict[str, Any]):
     # Extract parameters once
+    num_runs = OVERRIDE_NUM_RUNS or params["num_runs"]
+    if num_runs > MAX_NUM_RUNS:
+        raise ValueError(f"num_runs must be less than or equal to {MAX_NUM_RUNS}")
+    num_generations = OVERRIDE_NUM_GENERATIONS or 10_000_000
+
     max_generations = params["max_generations"]
     history_check_generations = params["history_check_generations"]
     parents_mating = params["parents_mating"]
+
+    population_size = params["population"]
     fitness_function_name = params["fitness_function"]
     dimension = params["dimension"]
     encoding_type = params["encoding_type"]
-    population_size = params["population"]
-    mutation_probability = params["mutation_probability"]
-    crossover_type = params["crossover_type"]
-    crossover_probability = params["crossover_probability"]
     parent_selection_params = params["selection_type"]["parent_selection_type"]
     next_population_selection_params = params["selection_type"].get(
         "next_generation_selection_type", {}
     )
+    crossover_type = params["crossover_type"]
+    crossover_probability = params["crossover_probability"]
+    mutation_probability = params["mutation_probability"]
 
     results_file = RESULTS_JSON_PATH / (
         "__".join(
@@ -184,7 +194,9 @@ def main(params: dict[str, Any]):
                 fitness_function_name,
                 str(dimension),
                 encoding_type,
+                params["selection_type"]["name"],
                 parent_selection_params["name"],
+                str(parents_mating),
                 str(parent_selection_params["param"]),
                 next_population_selection_params.get("name", "None"),
                 str(next_population_selection_params.get("param", "None")),
@@ -197,7 +209,7 @@ def main(params: dict[str, Any]):
     )
     if results_file.exists():
         with results_file.open("r") as f:
-            return json.load(f)
+            return results_file, json.load(f)
 
     # Get pre-computed objects
     populations = POPULATIONS[fitness_function_name][dimension][population_size]
@@ -216,7 +228,7 @@ def main(params: dict[str, Any]):
 
     # Pre-allocate metrics list with expected size
     metrics = []
-    for i in range(NUM_RUNS):
+    for i in range(num_runs):
         # Initialize per-run objects
         history_data = HistoryData(log_step=100)
         stop_criteria = StopCriteria(
@@ -229,7 +241,7 @@ def main(params: dict[str, Any]):
             # Basic parameters
             logger=logger,
             parallel_processing=["thread", CPU_COUNT],
-            num_generations=10_000_000,
+            num_generations=num_generations,
             keep_parents=0,
             keep_elitism=0,
             save_best_solutions=True,
@@ -307,7 +319,7 @@ def main(params: dict[str, Any]):
     with results_file.open("w") as f:
         json.dump(final_metrics, f, indent=4)
 
-    return final_metrics
+    return results_file, final_metrics
 
 
 def calculate_summary_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
@@ -367,8 +379,14 @@ if __name__ == "__main__":
     params_key = input("Enter the option number (v1/v2): ")
     params = parameters_simple[params_key]
 
-    # Run all parameter combinations in parallel using a process pool
-    # for param in tqdm(params):
-    #     main(param)
-    with mp.Pool(processes=CPU_COUNT) as pool:
-        r = list(tqdm(pool.imap(main, params), total=len(params)))
+    if CPU_COUNT == 1:
+        r = [main(param) for param in tqdm(params)]
+    else:
+        with mp.Pool(processes=CPU_COUNT) as pool:
+            r = list(tqdm(pool.imap(main, params), total=len(params)))
+
+    filenames = [values[0] for values in r]
+    print("Results:")
+    print(f"  Total: {len(filenames)}")
+    print(f"  Unique: {len(set(filenames))}")
+    print(f"  Duplicates: {len(filenames) - len(set(filenames))}")

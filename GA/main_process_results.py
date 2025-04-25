@@ -64,7 +64,7 @@ COLUMN_PADDING = 2
 def read_json_files() -> dict[str, dict[str, list[dict]]]:
     data = defaultdict(lambda: defaultdict(list))
     for file in tqdm(
-        JSON_DOCS.glob("*.json"), position=0, leave=False, desc="Reading JSON files"
+        sorted(JSON_DOCS.glob("*.json")), position=0, desc="Reading JSON files"
     ):
         with open(file) as f:
             result = json.load(f)
