@@ -48,9 +48,35 @@ class BaseFitnessFunction(ABC):
         """
         return self.fitness_func(self.global_max_x)
 
+    def validate_input(self, x: list[float]):
+        """
+        Validate the input to the fitness function.
+
+        Args:
+            x: The input to the fitness function.
+        """
+        if isinstance(x, np.ndarray):
+            x = x.tolist()
+        assert len(x) == self.n, (
+            f"The number of dimensions must be equal to n = {self.n}"
+        )
+
+    def fitness_func(self, x: list[float]) -> float:
+        """
+        The fitness function.
+
+        Args:
+            x: The input to the fitness function.
+
+        Returns:
+            The fitness of the individual.
+        """
+        self.validate_input(x)
+        return self._fitness_func_impl(x)
+
     @abstractmethod
     @cache
-    def fitness_func(self, x: list[float]) -> float:
+    def _fitness_func_impl(self, x: list[float]) -> float:
         """
         The fitness function.
 
@@ -62,8 +88,16 @@ class BaseFitnessFunction(ABC):
         """
         pass
 
-    @abstractmethod
     def fitness_func_many(self, x: list[list[float]]) -> list[float]:
+        """
+        The fitness function for many individuals.
+        """
+        self.validate_input(x)
+        return self._fitness_func_many_impl(x)
+
+    @abstractmethod
+    @cache
+    def _fitness_func_many_impl(self, x: list[list[float]]) -> list[float]:
         """
         The fitness function for many individuals.
 

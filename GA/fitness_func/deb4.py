@@ -31,7 +31,7 @@ class Deb4Function(BaseFitnessFunction):
         """
         return np.ones(self.n, dtype=np.float64) * 0.08
 
-    def fitness_func(self, x: list[float]) -> float:
+    def _fitness_func_impl(self, x: list[float]) -> float:
         """
         Calculate the fitness of an individual.
 
@@ -45,7 +45,7 @@ class Deb4Function(BaseFitnessFunction):
             self._exp_func(x[i]) * self._sin_part(x[i]) for i in range(self.n)
         )
 
-    def fitness_func_many(self, x: list[list[float]]) -> list[float]:
+    def _fitness_func_many_impl(self, x: list[list[float]]) -> list[float]:
         """
         Calculate the fitness of many individuals.
 
