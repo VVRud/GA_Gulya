@@ -55,11 +55,14 @@ class BaseFitnessFunction(ABC):
         Args:
             x: The input to the fitness function.
         """
-        if isinstance(x, np.ndarray):
-            x = x.tolist()
-        assert len(x) == self.n, (
-            f"The number of dimensions must be equal to n = {self.n}"
-        )
+        if x.ndim == 1:
+            assert len(x) == self.n, (
+                f"The number of dimensions must be equal to n = {self.n}"
+            )
+        elif x.ndim == 2:
+            assert x.shape[1] == self.n, (
+                f"The number of dimensions must be equal to n = {self.n}"
+            )
 
     def fitness_func(self, x: list[float]) -> float:
         """

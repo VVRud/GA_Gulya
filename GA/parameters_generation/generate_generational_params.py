@@ -7,7 +7,7 @@ PARAMETERS_PATH = Path.cwd() / "parameters"
 PARAMETERS_PATH.mkdir(exist_ok=True)
 
 # Common Parameters
-NUM_RUNS = 10
+NUM_RUNS = 100
 MAX_GENERATIONS = 100_000
 HISTORY_CHECK_GENERATIONS = 10
 DIMENSIONS = [1, 2, 3, 5]
@@ -35,7 +35,7 @@ MUTATION_PROBABILITIES = {
 }
 
 # generational parameters
-POPULATION_SIZES = [100, 200, 300, 400]
+POPULATION_SIZES = [100]
 
 BASE_PARENT_SELECTION_TYPES = [
     {"name": "generational", "parent_selection_type": {"name": "sus", "param": None}},

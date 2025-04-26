@@ -62,7 +62,7 @@ POPULATIONS_DIR = CWD / "populations"
 POPULATIONS_DIR.mkdir(exist_ok=True)
 
 # Pre-create directories
-RESULTS_DIR = CWD / "results"
+RESULTS_DIR = CWD / "results_100"
 RESULTS_DIR.mkdir(exist_ok=True)
 
 RESULTS_JSON_PATH = RESULTS_DIR / "json"
