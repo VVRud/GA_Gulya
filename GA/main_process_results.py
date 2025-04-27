@@ -9,7 +9,7 @@ from xlsxwriter.worksheet import Worksheet
 
 warnings.filterwarnings("ignore")
 
-RESULTS_PATH = Path.cwd() / "results"
+RESULTS_PATH = Path.cwd() / "results_100"
 JSON_DOCS = RESULTS_PATH / "json"
 
 XLSX_DOCS = RESULTS_PATH / "xlsx"
